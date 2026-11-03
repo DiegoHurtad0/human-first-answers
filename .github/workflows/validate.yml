@@ -10,11 +10,18 @@ permissions:
 
 jobs:
   validate:
-    runs-on: ubuntu-latest
+    # Explicit pairs, not a cross product: actions/setup-python has no Python 3.9
+    # build for Ubuntu 26.04, so 3.9 runs on 24.04. Do not use ubuntu-latest here;
+    # its image changes under us.
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.12"]
+        include:
+          - python-version: "3.9"
+            os: ubuntu-24.04
+          - python-version: "3.12"
+            os: ubuntu-26.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

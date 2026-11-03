@@ -103,6 +103,76 @@ class SizeAndPortability(unittest.TestCase):
         self.assertIn("Do not use it for", text)
 
 
+class CiWorkflow(unittest.TestCase):
+    """The workflow is read as data; these tests do not prove GitHub runs it successfully."""
+
+    @classmethod
+    def setUpClass(cls):
+        import yaml
+        cls.workflow = yaml.safe_load((ROOT / ".github" / "workflows" / "validate.yml").read_text(encoding="utf-8"))
+        cls.job = cls.workflow["jobs"]["validate"]
+
+    def test_python_versions_are_pinned_to_the_runners_that_provide_them(self):
+        pairs = {(e["python-version"], e["os"]) for e in self.job["strategy"]["matrix"]["include"]}
+        self.assertEqual(pairs, {("3.9", "ubuntu-24.04"), ("3.12", "ubuntu-26.04")})
+
+    def test_matrix_is_explicit_pairs_only(self):
+        matrix = self.job["strategy"]["matrix"]
+        self.assertEqual(set(matrix), {"include"})  # no extra axes that would expand into a cross product
+        self.assertFalse(self.job["strategy"]["fail-fast"])
+
+    def test_job_uses_the_matrix_values(self):
+        self.assertEqual(self.job["runs-on"], "${{ matrix.os }}")
+        setup = next(s for s in self.job["steps"] if str(s.get("uses", "")).startswith("actions/setup-python"))
+        self.assertEqual(setup["with"]["python-version"], "${{ matrix.python-version }}")
+
+    def test_no_floating_runner_label(self):
+        labels = [e["os"] for e in self.job["strategy"]["matrix"]["include"]]
+        self.assertEqual([label for label in labels if "latest" in label], [])
+
+    def test_all_required_steps_remain_in_order(self):
+        commands = [s.get("run") or s.get("uses") for s in self.job["steps"]]
+        expected = ["actions/checkout", "actions/setup-python", "requirements-dev.txt",
+                    "scripts/validate_project.py", "pytest", "run_evaluation.py --dry-run"]
+        positions = []
+        for fragment in expected:
+            matches = [i for i, c in enumerate(commands) if fragment in c]
+            self.assertTrue(matches, fragment)
+            positions.append(matches[0])
+        self.assertEqual(positions, sorted(positions))
+
+    def test_workflow_has_read_only_permissions(self):
+        self.assertEqual(self.workflow["permissions"], {"contents": "read"})
+
+
+class RepositoryPolicy(unittest.TestCase):
+    AGENTS = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+    CONTRIBUTING = (ROOT / "CONTRIBUTING.md").read_text(encoding="utf-8")
+
+    def test_attribution_policy_is_in_the_agent_instructions(self):
+        self.assertIn("## AI Tool Attribution Policy", self.AGENTS)
+        for fragment in ("Never add attribution", "Co-Authored-By", "git log -1 --format=%B",
+                         "never record an AI tool as author, committer, or co-author"):
+            self.assertIn(fragment, self.AGENTS)
+
+    def test_attribution_policy_is_in_the_contributor_guide(self):
+        self.assertIn("Do not add AI-tool attribution", self.CONTRIBUTING)
+        self.assertIn("AI Tool Attribution Policy", self.CONTRIBUTING)
+
+    def test_policy_keeps_license_and_third_party_attribution(self):
+        self.assertIn("MIT License and copyright notice", self.AGENTS)
+        self.assertIn("ATTRIBUTION.md", self.AGENTS)
+
+    def test_license_and_copyright_are_unchanged(self):
+        license_text = (ROOT / "LICENSE").read_text(encoding="utf-8")
+        self.assertTrue(license_text.startswith("MIT License\n\nCopyright (c) 2026 Diego Hurtado\n"))
+
+    def test_project_files_carry_no_tool_credit(self):
+        credit = re.compile(r"(?i)(made with|created with|generated (by|with)|powered by) (claude|cursor|gemini|chatgpt|copilot|windsurf)|co-authored-by")
+        for rel in ("README.md", "CHANGELOG.md", "SKILL.md", "ATTRIBUTION.md", "CONTRIBUTING.md"):
+            self.assertIsNone(credit.search((ROOT / rel).read_text(encoding="utf-8")), rel)
+
+
 class RunnerPromptBoundaries(unittest.TestCase):
     def test_candidate_gets_every_reference_but_the_rubric(self):
         system = R.build_candidate_system()

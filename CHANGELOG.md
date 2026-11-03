@@ -2,6 +2,15 @@
 
 All notable changes are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Fixed
+- CI: the Python 3.9 job failed before running any project code because `actions/setup-python` has no Python 3.9 build for Ubuntu 26.04. The workflow now pins explicit pairs: Python 3.9 on `ubuntu-24.04`, Python 3.12 on `ubuntu-26.04`.
+
+### Added
+- Repository policy against AI-tool attribution (`AGENTS.md`, `CONTRIBUTING.md`).
+- Tests that guard the workflow matrix and the presence of the policy.
+
 ## [1.0.0-rc.1] - 2026-11-03
 
 First release candidate. Structure and tooling are tested; response-quality improvement is unmeasured (see `docs/EVALUATION.md`).
