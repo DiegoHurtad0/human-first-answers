@@ -42,7 +42,7 @@ Use focused commits, for example:
 
 ## Release and license rules
 
-- Do not change `LICENSE` or the license wording in the skill, README, or attribution without an explicit maintainer decision.
+- Natural Voice is MIT licensed. Do not change `LICENSE` or the license wording in the skill, README, or attribution without an explicit maintainer decision. Third-party licenses in `ATTRIBUTION.md` describe other projects and must not be edited to match.
 - Never run `scripts/run_evaluation.py` without `--dry-run` from inside a Claude Code session, and never bypass its isolation checks.
 - Do not commit `evaluation-results/`, `.env`, or local voice profiles (`.natural-voice/`).
 - Claims of behavioral improvement need a completed evaluation report; otherwise label them unverified.

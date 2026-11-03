@@ -1,8 +1,10 @@
 # Attribution and licensing decisions
 
-No text, code, or data was copied from the projects below. Ideas that are general practice were written independently. Natural Voice's own license is defined by the `LICENSE` file; this document does not state or change it.
+No text, code, or data was copied from the projects below. Ideas that are general practice were written independently. Natural Voice itself is licensed under the MIT License (see `LICENSE`). The licenses listed below belong to the third-party projects, are unchanged by this repository, and do not describe Natural Voice.
 
 Licenses and activity were re-checked on 2026-11-03 from each repository's GitHub metadata. File trees and the top-level `SKILL.md` or `README.md` were read through a page-fetch tool (and `evals/RESULTS.md` for i-have-adhd). The repositories were not cloned and not every file was read, so the "implemented" column describes what those files state, not behavior that was run.
+
+Copy check (2026-11-03): every Markdown, Python, and YAML file in this repository was compared with the upstream `SKILL.md`, README, and pattern files of the projects below for verbatim runs of eight or more words. The only hits were a stock phrase quoted as an anti-pattern ("let me know if you need anything else") and one example sentence, which was reworded. This detects copied wording, not copied ideas; idea-level influence is listed in the table.
 
 | Project | License | Implemented (per its files) | How it informed Natural Voice | Not adopted |
 |---|---|---|---|---|

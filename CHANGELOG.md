@@ -25,12 +25,13 @@ First release candidate. Structure and tooling are tested; response-quality impr
 - `--dry-run` no longer requires `--safe-mode`; it reports whether a live run would be blocked.
 - Workflow step 6: AI-writing patterns are applied while drafting, with a separate revision pass only when needed.
 - README rewritten to match the implementation; install paths checked against Claude Code and Codex documentation.
-- License references in `SKILL.md`, `README.md`, and `ATTRIBUTION.md` now point to the `LICENSE` file instead of naming a license (see below).
 
 ### Fixed
 - README listed a CI workflow that did not exist.
 - Dimension names disagreed between the cases file, the runner, and the rubric.
 - Regression prompts contained annotations and a missing message; they are now runnable prompts.
 
-### Notes
-- `LICENSE` is unchanged by this release.
+### Licensing
+- The maintainer decided on the MIT License. `LICENSE` now contains the MIT text (previously the repository's initial commit carried Apache-2.0), copyright holder Diego Gustavo Hurtado Olivares, 2026.
+- `SKILL.md` (`license: MIT`), `README.md`, `ATTRIBUTION.md`, `CONTRIBUTING.md`, and `AGENTS.md` state MIT. Third-party licenses in `ATTRIBUTION.md` are unchanged.
+- The validator now checks that the `license` field matches the `LICENSE` file.

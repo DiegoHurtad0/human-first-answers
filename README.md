@@ -203,4 +203,4 @@ python3 -m pytest -q
 
 ## License
 
-The license is defined by the [`LICENSE`](LICENSE) file in this repository. Attribution for the projects that informed the design is in [`ATTRIBUTION.md`](ATTRIBUTION.md).
+Natural Voice is released under the [MIT License](LICENSE). Copyright (c) 2026 Diego Gustavo Hurtado Olivares. Third-party projects that informed the design keep their own licenses, listed in [`ATTRIBUTION.md`](ATTRIBUTION.md).

@@ -300,6 +300,37 @@ class CaseFilesAcrossTheValidator(unittest.TestCase):
         self.assertTrue(any("file not found" in e for e in report.errors))
 
 
+class License(Fixture):
+    MIT = "MIT License\n\nCopyright (c) 2026 Jane Doe\n\nPermission is hereby granted...\n"
+
+    def check(self, skill_license, license_text):
+        self.skill(VALID_SKILL.replace("license: See LICENSE", f"license: {skill_license}"))
+        self.write("LICENSE", license_text)
+        report = V.Report()
+        V.check_license(self.root, (self.root / "SKILL.md").read_text(), report)
+        return report
+
+    def test_matching_mit_passes(self):
+        self.assertEqual(self.check("MIT", self.MIT).errors, [])
+
+    def test_declared_mit_with_apache_file_fails(self):
+        report = self.check("MIT", "                                 Apache License\n Version 2.0\n")
+        self.assertTrue(any("does not start with 'MIT License'" in e for e in report.errors))
+
+    def test_mit_without_copyright_line_fails(self):
+        report = self.check("MIT", "MIT License\n\nPermission is hereby granted...\n")
+        self.assertTrue(any("Copyright (c)" in e for e in report.errors))
+
+    def test_unknown_declared_license_fails(self):
+        self.assertTrue(any("not one of" in e for e in self.check("See LICENSE", self.MIT).errors))
+
+    def test_this_repository_declares_mit(self):
+        text = (ROOT / "LICENSE").read_text(encoding="utf-8")
+        self.assertTrue(text.startswith("MIT License"))
+        self.assertIn("license: MIT", (ROOT / "SKILL.md").read_text(encoding="utf-8"))
+        self.assertNotIn("Apache", text)
+
+
 class Cli(unittest.TestCase):
     def test_symlinked_install_keeps_the_link_name_for_strict_install(self):
         tmp = Path(tempfile.mkdtemp())

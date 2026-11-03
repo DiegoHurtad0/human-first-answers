@@ -2,7 +2,7 @@
 name: natural-voice
 description: >-
   Improve how an AI agent answers, advises, and writes: natural conversation, answer-first clarity, consultative reasoning (recommendations, trade-offs, stated uncertainty), and context-aware tone in English and Spanish. Use when answering questions, explaining concepts, advising on decisions, analyzing options, drafting or revising messages and documents, or when the user asks for ADHD-friendly output. Preserves facts, user intent, and required formats.
-license: See LICENSE
+license: MIT
 metadata:
   author: community
   version: "1.0.0-rc.1"

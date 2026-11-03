@@ -42,7 +42,7 @@ Python 3.9 or newer. The skill itself has no dependencies; PyYAML and pytest are
 
 ## Attribution and license
 
-If you adapt material from another project, copy only what its license allows, keep its notice, and update `ATTRIBUTION.md`. Do not change `LICENSE` in a feature pull request; open an issue instead. By contributing you agree your work is provided under the repository's license.
+If you adapt material from another project, copy only what its license allows, keep its notice, and update `ATTRIBUTION.md`. Do not change `LICENSE` in a feature pull request; open an issue instead. By contributing you agree your work is provided under the MIT License that covers this repository.
 
 ## Commits
 

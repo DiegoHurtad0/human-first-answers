@@ -295,6 +295,27 @@ def check_hygiene(root: Path, report: Report) -> None:
                 report.error(f"{rel}: possible {label}")
 
 
+LICENSE_HEADERS = {"MIT": "MIT License", "Apache-2.0": "Apache License"}
+
+
+def check_license(root: Path, skill_text: str, report: Report) -> None:
+    """The SKILL.md `license` value must be a known license that matches the LICENSE file."""
+    parts = split_frontmatter(skill_text)
+    meta = yaml.safe_load(parts[0]) if parts else None
+    declared = meta.get("license") if isinstance(meta, dict) else None
+    license_text = read_text(root / "LICENSE", report)
+    if not isinstance(declared, str) or license_text is None:
+        return
+    header = LICENSE_HEADERS.get(declared)
+    if header is None:
+        report.error(f"SKILL.md: license {declared!r} is not one of {sorted(LICENSE_HEADERS)}; "
+                     "add it to LICENSE_HEADERS after checking the LICENSE file matches")
+    elif not license_text.lstrip().startswith(header):
+        report.error(f"LICENSE does not start with {header!r}, but SKILL.md declares license: {declared}")
+    elif declared == "MIT" and not re.search(r"(?m)^Copyright \(c\) \d{4} \S", license_text):
+        report.error("LICENSE: MIT text needs a 'Copyright (c) <year> <holder>' line")
+
+
 def check_required_files(root: Path, report: Report) -> None:
     for rel in REQUIRED_FILES:
         path = root / rel
@@ -314,6 +335,7 @@ def validate(root: Path, strict_install: bool = False, project_files: bool = Tru
     check_links(root, report)
     if project_files:
         check_required_files(root, report)
+        check_license(root, skill_text, report)
         check_readme(root, report)
         check_cases(root, report)
         check_hygiene(root, report)

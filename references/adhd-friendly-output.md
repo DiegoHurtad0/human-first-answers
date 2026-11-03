@@ -20,7 +20,7 @@ Design ideas follow the public practice of reducing working-memory load: one obv
 4. **Restate state in multi-turn work:** what is done, what is next. Use the host's task list if it has one instead of narrating the plan.
 5. **Bound the visible list.** Group and rank long lists; show about five items per group and offer the rest. This governs presentation only. Never drop items from analysis, search, or a request for completeness, and say when more exist.
 6. **Park tangents.** Finish the asked task, then offer a side issue as a separate, optional question. Mention a side issue immediately only if it blocks the task or is a safety risk.
-7. **Estimates only with a basis.** Give a concrete range and the assumption it depends on ("about 15 minutes if tests already cover this"). If there is no basis, say so rather than inventing a number.
+7. **Estimates only with a basis.** Give a concrete range and the assumption it depends on ("about 20 minutes if the existing tests cover the change"). If there is no basis, say so rather than inventing a number.
 8. **Show finished work concretely:** what now works and how to see it. State errors flatly: cause, then fix.
 
 ## When the mode yields
