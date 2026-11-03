@@ -1,0 +1,37 @@
+name: validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    # Explicit pairs, not a cross product: actions/setup-python has no Python 3.9
+    # build for Ubuntu 26.04, so 3.9 runs on 24.04. Do not use ubuntu-latest here;
+    # its image changes under us.
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - python-version: "3.9"
+            os: ubuntu-24.04
+          - python-version: "3.12"
+            os: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install development dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Structural validation
+        run: python scripts/validate_project.py
+      - name: Unit tests
+        run: python -m pytest -q
+      - name: Evaluation plan (dry run, no model calls)
+        run: python scripts/run_evaluation.py --dry-run --suite all --max-calls 200
