@@ -1,0 +1,16 @@
+# Generated evaluation output (may contain model responses)
+evaluation-results/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# OS and local configuration
+.DS_Store
+.env
+
+# Local voice profile (personal preferences; never commit)
+.natural-voice/
