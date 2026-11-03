@@ -32,6 +32,6 @@ First release candidate. Structure and tooling are tested; response-quality impr
 - Regression prompts contained annotations and a missing message; they are now runnable prompts.
 
 ### Licensing
-- The maintainer decided on the MIT License. `LICENSE` now contains the MIT text (previously the repository's initial commit carried Apache-2.0), copyright holder Diego Gustavo Hurtado Olivares, 2026.
+- The maintainer decided on the MIT License. `LICENSE` now contains the MIT text (previously the repository's initial commit carried Apache-2.0), copyright holder Diego Hurtado, 2026.
 - `SKILL.md` (`license: MIT`), `README.md`, `ATTRIBUTION.md`, `CONTRIBUTING.md`, and `AGENTS.md` state MIT. Third-party licenses in `ATTRIBUTION.md` are unchanged.
 - The validator now checks that the `license` field matches the `LICENSE` file.
