@@ -496,3 +496,144 @@ cases:
       - replies_only_with_approved
       - drops_the_dietary_confirmation
       - more_than_one_sentence
+
+  # --- Conversation continuity without echoing ---------------------------------
+  # Properties are judged under the existing dimensions: continuity and acknowledgment
+  # under contextual_fit and naturalness, redundant restatement under clarity and
+  # naturalness, kept information under factual_fidelity. No new dimension is invented.
+  # Cases with `turns` are manual: the runner cannot replay scripted assistant turns.
+
+  - id: continuity_tired_english
+    language: en
+    category: conversation_continuity
+    intent: emotional_disclosure_casual
+    prompt: "Rough day. I've been in meetings since eight and I'm wiped."
+    expected:
+      - react_to_the_situation_not_the_sentence
+      - short_natural_prose
+      - at_most_one_question_and_only_if_it_fits
+    failure_modes:
+      - restates_that_the_user_is_tired_after_meetings
+      - generic_empathy_formula
+      - productivity_tips_nobody_asked_for
+      - several_follow_up_questions
+
+  - id: continuity_opinion_adds_substance_es
+    language: es
+    category: conversation_continuity
+    intent: opinion_needs_a_perspective
+    prompt: "Creo que deberíamos esperar hasta tener los resultados del experimento."
+    expected:
+      - state_agreement_or_disagreement_with_a_reason
+      - add_a_consequence_such_as_decision_made_under_uncertainty_without_the_results
+      - natural_conversational_spanish
+    failure_modes:
+      - paraphrases_the_users_sentence_back
+      - agrees_with_no_reason
+      - invents_experiment_details
+      - formal_report_structure
+
+  - id: continuity_requested_summary_keeps_repetition_es
+    language: es
+    category: conversation_continuity
+    intent: requested_restatement
+    prompt: "Resume en dos líneas lo que acordamos: lanzamos la beta el 20 de noviembre solo para clientes actuales, el precio sigue gratis hasta enero y Marta se encarga del anuncio."
+    expected:
+      - restate_all_three_decisions_accurately_the_date_the_audience_and_the_price_and_the_owner
+      - at_most_two_lines
+      - add_no_new_facts
+    failure_modes:
+      - drops_a_decision_to_avoid_repeating_it
+      - changes_a_date_or_owner
+      - adds_commentary_or_a_follow_up_question
+
+  - id: continuity_consequential_action_confirms_en
+    language: en
+    category: conversation_continuity
+    intent: consequential_action_confirmation
+    prompt: "Cancel my flight to Lisbon on November 12, booking code QX7L2P."
+    expected:
+      - never_claim_the_flight_was_cancelled_unless_the_assistant_can_and_did_act
+      - if_it_cannot_act_say_so_plainly
+      - if_it_can_act_restate_the_booking_code_and_date_and_ask_for_confirmation_first
+    failure_modes:
+      - states_the_booking_is_cancelled
+      - invents_a_cancellation_policy_or_refund
+      - drops_the_booking_code_or_date_from_a_confirmation
+      - long_preamble
+
+  - id: continuity_short_answer_no_reflex_question_es
+    language: es
+    category: conversation_continuity
+    intent: short_confirmation_after_a_question
+    manual: true
+    turns:
+      - role: assistant
+        text: "¿Ya comiste?"
+      - role: user
+        text: "Sí."
+    expected:
+      - brief_natural_acknowledgment_such_as_ah_perfecto
+      - no_follow_up_question_unless_the_context_gives_a_reason
+      - proportionate_length
+    failure_modes:
+      - restates_that_the_user_already_ate
+      - asks_what_when_or_where_by_reflex
+      - praise_stamp
+      - multiple_questions
+
+  - id: continuity_hedge_leaves_room_en
+    language: en
+    category: conversation_continuity
+    intent: hedged_reply
+    manual: true
+    turns:
+      - role: assistant
+        text: "Want to grab dinner on Friday?"
+      - role: user
+        text: "Maybe."
+    expected:
+      - leave_room_without_pressure
+      - very_short
+      - no_summary_of_options_or_persuasion
+    failure_modes:
+      - restates_that_the_user_might_come
+      - pushes_for_a_commitment
+      - long_list_of_alternatives
+
+  - id: continuity_deferral_accepted_es
+    language: es
+    category: conversation_continuity
+    intent: deferred_reply
+    manual: true
+    turns:
+      - role: assistant
+        text: "¿Quieres que te mande la propuesta hoy o mañana?"
+      - role: user
+        text: "Ahorita te digo."
+    expected:
+      - accept_the_deferral_briefly_such_as_va_sin_prisa
+      - no_pressure_and_no_restating_the_options
+    failure_modes:
+      - restates_that_the_user_will_answer_soon
+      - repeats_the_hoy_or_manana_question
+      - invents_a_deadline
+
+  - id: continuity_weekend_visit_es
+    language: es
+    category: conversation_continuity
+    intent: new_information_in_casual_chat
+    manual: true
+    turns:
+      - role: assistant
+        text: "¿Qué hiciste el fin de semana?"
+      - role: user
+        text: "Fui a visitar a mis papás."
+    expected:
+      - react_naturally_without_repeating_that_the_user_visited_their_parents
+      - one_follow_up_that_comes_from_the_context_or_a_brief_reaction
+      - brief
+    failure_modes:
+      - ah_fuiste_a_visitar_a_tus_papas
+      - generic_praise_only
+      - several_questions

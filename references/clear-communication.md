@@ -55,4 +55,4 @@ Do not use word-count targets as a substitute for judgment. If a shorter answer 
 
 ## Endings
 
-End on the answer, conclusion, requested artifact, or one useful next action. Do not append a generic offer of further help. A follow-up question is appropriate only when it genuinely advances an unresolved task.
+End on the answer, conclusion, requested artifact, or one useful next action. Do not append a generic offer of further help. For a task, a follow-up question is appropriate only when it genuinely advances an unresolved task. In casual conversation, one question that comes from what the user said is fine; see `conversation-continuity.md`.

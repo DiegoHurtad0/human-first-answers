@@ -16,6 +16,8 @@ Usage:
   python3 scripts/run_evaluation.py --suite evaluation --max-calls 120 --max-usd 15
   python3 scripts/run_evaluation.py --cases precedence_user_overrides_brevity
 
+  python3 scripts/run_evaluation.py --show-manual             # print manual cases for human review
+
 Suites: pilot (default), evaluation (every case in evaluation-cases.yaml),
 regression (regression-cases.yaml), all. Cases marked `manual: true` need a
 multi-turn transcript or a human and are never run automatically.
@@ -411,6 +413,23 @@ def render_report(result: dict, config: dict, cases: dict[str, dict], case_ids: 
     return "\n".join(lines) + "\n"
 
 
+def render_manual_cases(cases: dict[str, dict]) -> str:
+    """Manual cases as text for a reviewer. Scripted turns are shown as a transcript to replay by hand."""
+    blocks = []
+    for cid, case in cases.items():
+        if not case["manual"]:
+            continue
+        shown = case_schema.render_transcript(case["turns"]) if case["turns"] else f"User: {case['prompt']}"
+        lines = [f"## {cid} ({case['language']})", "", shown, "",
+                 "Judge the next assistant response.", "Expected:"]
+        lines += [f"  - {x}" for x in case["expected"]] + ["Failure modes:"] + [f"  - {x}" for x in case["failure_modes"]]
+        blocks.append("\n".join(lines))
+    header = ("# Manual cases\n\nThese need a real stateful conversation (scripted assistant turns, a host system "
+              "prompt, or a person). The automated runner never runs them. Do not paste a transcript into one "
+              "prompt and treat the result as equivalent.\n\n")
+    return header + "\n\n".join(blocks)
+
+
 def select_cases(args, cases: dict[str, dict]) -> list[str]:
     """Resolve --cases / --suite to ids. Manual cases are never part of a suite."""
     if args.cases:
@@ -435,6 +454,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--timeout", type=int, default=240)
     p.add_argument("--output-dir", type=Path, default=ROOT / "evaluation-results")
     p.add_argument("--dry-run", action="store_true", help="build and print the plan; make no model calls")
+    p.add_argument("--show-manual", action="store_true",
+                   help="print manual cases (transcripts and acceptance criteria) for human review; no model calls")
     args = p.parse_args(argv)
 
     try:
@@ -442,6 +463,9 @@ def main(argv: list[str] | None = None) -> int:
     except case_schema.CaseFileError as exc:
         print(f"Invalid test cases: {exc}", file=sys.stderr)
         return 2
+    if args.show_manual:
+        print(render_manual_cases(cases))
+        return 0
     case_ids = select_cases(args, cases)
     missing = [c for c in case_ids if c not in cases]
     manual = [c for c in case_ids if c in cases and cases[c]["manual"]]

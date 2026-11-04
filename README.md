@@ -24,6 +24,7 @@ Natural Voice is a set of instructions and reference files for hosts that suppor
 | Natural conversation | Responds to the specific situation, warm only when warmth fits, no invented feelings or experiences. |
 | Clear communication | Answer first, proportionate depth, structure only where it helps. |
 | Consultative thinking | Recommendation, decisive criteria, trade-offs, assumptions, and what would change the answer. Pyramid Principle, SCQA, MECE, first-principles, hypothesis-driven, and cost-benefit analysis are used when they fit and skipped when they do not. |
+| Conversation continuity | Responds to what a message does instead of restating it; accepts a short acknowledgment as a complete reply; keeps repetition when safety, a consequential confirmation, or a requested summary needs it. |
 | Context adaptation | Register and depth by audience, channel, language, and stakes. English and Spanish are covered by test cases. |
 | Editing provided text | Improves wording without changing facts, figures, commitments, or technical terms. |
 | ADHD-friendly mode | Optional. Off by default. Action first, bounded steps, visible state, content never dropped. |
@@ -78,6 +79,7 @@ natural-voice/
 ├── references/
 │   ├── instruction-precedence.md
 │   ├── natural-conversation.md
+│   ├── conversation-continuity.md
 │   ├── clear-communication.md
 │   ├── consultative-thinking.md
 │   ├── pyramid-principle-scqa.md

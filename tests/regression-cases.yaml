@@ -196,3 +196,162 @@ regressions:
       - claim_the_user_can_override_the_system_instruction
     must:
       - follow_the_system_instruction_on_language_and_register
+
+  # --- Conversation continuity without echoing ---------------------------------
+  # The target is unnecessary echoing, not repetition. Cases that need an earlier
+  # assistant turn use `turns` and are manual; the runner cannot replay scripted turns.
+
+  - id: echo_spanish_yes_no_answer
+    language: es
+    manual: true
+    turns:
+      - role: assistant
+        text: "¿Te bañaste hoy?"
+      - role: user
+        text: "Sí."
+    must_not:
+      - repeat_the_yes_as_a_full_reformulation_such_as_si_te_banaste_hoy
+      - repeat_the_original_question
+      - add_unnecessary_praise
+      - force_several_follow_up_questions
+    must:
+      - respond_naturally_and_proportionately
+      - advance_only_when_useful_for_example_ah_perfecto_or_a_context_based_question
+
+  - id: echo_english_yes_no_answer
+    language: en
+    manual: true
+    turns:
+      - role: assistant
+        text: "Did you get the report?"
+      - role: user
+        text: "Yes."
+    must_not:
+      - repeat_the_answer_as_yes_you_got_the_report
+      - invent_an_action_or_access_such_as_looking_at_a_report_it_does_not_have
+      - add_unnecessary_praise
+    must:
+      - acknowledge_briefly
+      - offer_to_act_only_if_the_assistant_actually_has_the_report_and_can_act
+
+  - id: echo_short_confirmation_after_offer
+    language: es
+    manual: true
+    turns:
+      - role: assistant
+        text: "¿Quieres que lo explique con un ejemplo?"
+      - role: user
+        text: "Claro."
+    must_not:
+      - restate_the_question_or_the_confirmation_such_as_claro_quieres_un_ejemplo
+      - ask_again_whether_the_user_wants_the_example
+    must:
+      - give_the_example_directly
+
+  - id: echo_emotional_disclosure
+    language: es
+    prompt: "Estoy triste porque discutí con mi pareja."
+    must_not:
+      - paraphrase_the_sentence_back_such_as_entiendo_estas_triste_porque_discutiste
+      - generic_empathy_formula
+      - jump_to_a_numbered_plan
+      - diagnose_the_relationship
+    must:
+      - respond_to_the_situation_in_natural_spanish
+      - at_most_one_follow_up_question_that_fits_the_context
+
+  - id: continuity_multi_turn_advances
+    language: es
+    manual: true
+    turns:
+      - role: assistant
+        text: "¿Qué hiciste el fin de semana?"
+      - role: user
+        text: "Fui a visitar a mis papás."
+      - role: assistant
+        text: "Qué bien. ¿Hacía mucho que no los veías?"
+      - role: user
+        text: "Como tres meses. Mi mamá cocinó demasiado, como siempre."
+    must_not:
+      - repeat_that_the_user_visited_their_parents_or_that_three_months_passed
+      - repeat_the_earlier_question
+      - restart_with_a_new_unrelated_topic
+    must:
+      - react_to_the_new_detail_the_cooking
+      - move_the_conversation_forward_naturally
+
+  - id: continuity_follow_up_uses_prior_context
+    language: es
+    manual: true
+    turns:
+      - role: user
+        text: "Estoy planeando un viaje a Oaxaca en diciembre con mi hermana."
+      - role: assistant
+        text: "Qué buen plan. ¿Ya tienen fechas?"
+      - role: user
+        text: "Del 20 al 27."
+    must_not:
+      - ask_again_for_the_destination_or_who_is_traveling
+      - recite_the_whole_plan_back
+      - invent_bookings_or_prices
+    must:
+      - use_oaxaca_and_the_dates_implicitly
+      - respond_to_what_the_dates_imply_without_inventing_facts
+
+  - id: continuity_correction_updates_state
+    language: es
+    manual: true
+    turns:
+      - role: user
+        text: "Mi reunión es el martes a las 3."
+      - role: assistant
+        text: "Perfecto, la reunión es el martes a las 3."
+      - role: user
+        text: "Perdón, es el miércoles."
+    must_not:
+      - keep_using_martes
+      - long_apology
+      - leave_the_corrected_day_unconfirmed
+    must:
+      - acknowledge_the_correction_in_a_few_words
+      - use_miercoles_from_now_on
+      - keep_the_unchanged_time_of_3
+      - restate_the_corrected_day_and_time_once_because_a_correction_is_consequential
+
+  - id: continuity_topic_change_drops_old_topic
+    language: es
+    manual: true
+    turns:
+      - role: user
+        text: "Mi script de Python da un KeyError en la línea 12."
+      - role: assistant
+        text: "Probablemente la clave no existe en el diccionario. Prueba con .get() o revisa cómo se construye."
+      - role: user
+        text: "Ya lo arreglé, gracias. Por cierto, ¿qué puedo cocinar rápido con huevo y espinaca?"
+    must_not:
+      - drag_the_python_error_into_the_cooking_answer
+      - spend_a_paragraph_on_the_resolved_bug
+    must:
+      - acknowledge_the_fix_in_a_few_words_at_most
+      - answer_the_cooking_question
+
+  - id: repetition_confirms_consequential_action
+    language: es
+    prompt: "Cancela mi reservación de hotel en Oaxaca del 20 al 27 de diciembre, código HX-4471."
+    must_not:
+      - claim_the_reservation_is_cancelled_without_the_ability_to_act
+      - drop_the_code_or_the_dates_to_avoid_repeating_them
+      - invent_a_refund_or_cancellation_policy
+    must:
+      - if_it_cannot_act_say_so_plainly
+      - if_it_can_act_restate_the_code_and_dates_and_ask_for_confirmation
+
+  - id: repetition_is_right_when_summary_requested
+    language: en
+    prompt: "Summarize in two lines what we decided: the beta ships Nov 20 to existing customers only, pricing stays free until January, and Marta owns the announcement."
+    must_not:
+      - omit_a_decision_because_it_was_just_stated
+      - change_a_date_or_owner
+      - add_new_facts
+    must:
+      - restate_the_date_the_audience_the_pricing_and_the_owner_in_two_lines

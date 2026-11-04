@@ -18,7 +18,18 @@ Each is judged on its own: naturalness, clarity, relevance, contextual fit, fact
 
 ## Case coverage
 
-`scripts/case_schema.py` requires at least one evaluation case in each of: simple facts, casual chat (English and Spanish), personal advice, professional writing, text revision, technical explanation, senior engineering analysis, strategic decisions, evidence-based recommendations, ambiguous questions, strict formats, requests for depth, requests for brevity, cases where a framework would be wrong, contradictory information, ADHD mode, and instruction precedence. It also requires at least five Spanish cases.
+`scripts/case_schema.py` requires at least one evaluation case in each of: simple facts, casual chat (English and Spanish), personal advice, professional writing, text revision, technical explanation, senior engineering analysis, strategic decisions, evidence-based recommendations, ambiguous questions, strict formats, requests for depth, requests for brevity, cases where a framework would be wrong, contradictory information, ADHD mode, instruction precedence, and conversation continuity. It also requires at least five Spanish cases and one scripted multi-turn case in each of English and Spanish.
+
+## Multi-turn and manual cases
+
+Conversation continuity cannot be judged from one message: "Sí." means nothing without the question before it. Cases of this kind use `turns`, a scripted transcript that ends on a user turn; the response under test is the assistant's next turn.
+
+- The runner sends a single prompt and cannot replay scripted assistant turns, so `turns` requires `manual: true`. The schema rejects anything else.
+- A transcript flattened into one prompt is not a stateful conversation and is not used as a stand-in.
+- `python scripts/run_evaluation.py --show-manual` prints every manual case with its transcript, acceptance properties, and failure modes. A reviewer replays the scripted turns in a real conversation with the host and model under test (for example through an API that accepts message history) and judges the next response against the listed properties.
+- Cases with a single `prompt` that do not depend on earlier turns stay automated, including the continuity cases about emotional disclosure, requested summaries, and consequential confirmations.
+- Continuity properties are judged under the existing dimensions (contextual fit, naturalness, clarity, factual fidelity). No new dimension was added.
+- The goal is less unnecessary echoing, not less repetition. Cases for requested summaries and consequential confirmations penalize a response that drops the repetition.
 
 ## Runner guarantees
 
@@ -40,6 +51,7 @@ Each is judged on its own: naturalness, clarity, relevance, contextual fit, fact
 | It does not reduce factual fidelity | Unverified |
 | It follows the precedence order | Unverified; acceptance cases exist |
 | ADHD mode stays optional and keeps completeness | Unverified; acceptance cases exist |
+| Responses echo the user less while keeping needed repetition | Unverified; acceptance cases exist, seven of them manual |
 | The files are valid and tooling works | Verified by layers A and B |
 
 ### History of live attempts

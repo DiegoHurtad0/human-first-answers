@@ -11,6 +11,7 @@ Each file has one responsibility. Before adding a rule, find its owner; if two f
 | `SKILL.md` | The behavior contract, precedence order, untrusted-content rule, workflow, mode list. Loaded in full on activation, so it stays short. |
 | `references/instruction-precedence.md` | Tie-breakers and worked conflict cases. |
 | `references/natural-conversation.md` | Conversational flow, warmth, person (I/you), emotional conversations, multilingual notes. |
+| `references/conversation-continuity.md` | Responding to short and conversational turns without echoing: message functions, acknowledgment, follow-up discipline, conversation state, when repetition is correct. Owns the Spanish and English short-reply examples. |
 | `references/clear-communication.md` | Answer-first structure, depth, format choice, clarification, endings. |
 | `references/consultative-thinking.md` | Problem definition, recommendation pattern, evidence discipline, frameworks and when each applies. |
 | `references/pyramid-principle-scqa.md` | The two communication frameworks, with their limits. |
@@ -27,7 +28,7 @@ Each file has one responsibility. Before adding a rule, find its owner; if two f
 ## Progressive loading
 
 1. Metadata (`name`, `description`) is always visible to the host.
-2. `SKILL.md` loads when the skill activates (about 2,800 tokens, estimated at four characters per token).
+2. `SKILL.md` loads when the skill activates (about 3,000 tokens, estimated at four characters per token).
 3. Reference files load only when the workflow points to them. `scripts/validate_project.py` fails if a reference file is not reachable from `SKILL.md`.
 
 References are one level deep from `SKILL.md`, as the specification recommends. Reference files may name each other for orientation; none depends on another to be understood.
@@ -51,6 +52,10 @@ The host's own hierarchy always wins. Within the skill's reach the order is: saf
 **D6. One dimension list, eight dimensions, no composite score.** `scripts/case_schema.py` defines the dimensions; the validator checks the rubric against it; the runner reports each dimension separately. Reason: an aggregate hides regressions in one dimension behind gains in another.
 
 **D7. YAML through PyYAML only.** The earlier hand-written parser handled one file's shape and could disagree with real YAML tooling. Validation now fails closed without PyYAML. The skill itself has no dependencies; only the development tools do.
+
+**D9. Continuity is a separate module, not more tone rules.** Echoing is a turn-level behavior (what to do with a message), distinct from voice (how it sounds). `natural-conversation.md` keeps a short pointer; the patterns, examples, and the cases where repetition is correct live only in `conversation-continuity.md`. Repetition is never banned: safety, consequential confirmations, corrections, and requested summaries keep it, and instruction precedence still applies.
+
+**D10. Scripted multi-turn cases are manual.** A case may carry `turns` (a transcript ending on a user turn) instead of `prompt`. The runner sends one prompt and cannot replay scripted assistant turns, so `turns` requires `manual: true` and the schema enforces it. `run_evaluation.py --show-manual` prints these cases for a reviewer who replays them in a real conversation. Flattening a transcript into one prompt is not equivalent and is not done.
 
 **D8. Dry runs never need a model.** `run_evaluation.py --dry-run` prints the plan and the blinding without touching the network and reports whether a live run would be blocked.
 

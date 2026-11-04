@@ -83,6 +83,69 @@ class Coverage(unittest.TestCase):
         self.assertTrue(any("Spanish case" in e for e in errors))
 
 
+def with_case(**overrides):
+    data = copy.deepcopy(REAL)
+    base = {"id": "scripted", "language": "en", "category": "conversation_continuity", "intent": "x",
+            "manual": True, "turns": [{"role": "assistant", "text": "Did you eat?"}, {"role": "user", "text": "Yes."}],
+            "expected": ["a"], "failure_modes": ["b"]}
+    base.update(overrides)
+    data["cases"].append(base)
+    return C.validate_evaluation_file(data)
+
+
+class ScriptedTurns(unittest.TestCase):
+    def test_a_valid_transcript_passes(self):
+        self.assertEqual(with_case(), [])
+
+    def test_transcript_must_be_manual(self):
+        errors = with_case(manual=False)
+        self.assertTrue(any("must set 'manual: true'" in e for e in errors))
+        data = copy.deepcopy(REAL)
+        data["cases"].append({"id": "no_flag", "language": "en", "category": "conversation_continuity", "intent": "x",
+                              "turns": [{"role": "assistant", "text": "a"}, {"role": "user", "text": "b"}],
+                              "expected": ["a"], "failure_modes": ["b"]})
+        self.assertTrue(any("must set 'manual: true'" in e for e in C.validate_evaluation_file(data)))
+
+    def test_prompt_and_turns_are_mutually_exclusive(self):
+        self.assertTrue(any("exactly one of" in e for e in with_case(prompt="also a prompt")))
+        data = copy.deepcopy(REAL)
+        del data["cases"][0]["prompt"]
+        self.assertTrue(any("exactly one of" in e for e in C.validate_evaluation_file(data)))
+
+    def test_transcript_must_end_on_a_user_turn(self):
+        errors = with_case(turns=[{"role": "user", "text": "Hi"}, {"role": "assistant", "text": "Hello"}])
+        self.assertTrue(any("last turn must be a user turn" in e for e in errors))
+
+    def test_malformed_turns_are_reported(self):
+        for bad in ([{"role": "user", "text": "only one"}],
+                    [{"role": "bot", "text": "a"}, {"role": "user", "text": "b"}],
+                    [{"role": "assistant", "text": ""}, {"role": "user", "text": "b"}],
+                    [{"role": "assistant", "text": "a", "extra": 1}, {"role": "user", "text": "b"}],
+                    "not a list"):
+            self.assertTrue(with_case(turns=bad), bad)
+
+    def test_multi_turn_coverage_per_language(self):
+        data = copy.deepcopy(REAL)
+        data["cases"] = [c for c in data["cases"] if not ("turns" in c and c["language"].startswith("es"))]
+        self.assertTrue(any("multi-turn evaluation case in language 'es'" in e for e in C.validate_evaluation_file(data)))
+
+    def test_regression_cases_accept_turns_under_the_same_rules(self):
+        data = copy.deepcopy(REAL_REGRESSION)
+        data["regressions"].append({"id": "bad_turns", "turns": [{"role": "user", "text": "a"}, {"role": "user", "text": "b"}],
+                                    "must": ["x"], "must_not": ["y"]})
+        self.assertTrue(any("must set 'manual: true'" in e for e in C.validate_regression_file(data)))
+
+    def test_render_transcript(self):
+        turns = [{"role": "assistant", "text": "¿Te bañaste hoy?"}, {"role": "user", "text": "Sí."}]
+        self.assertEqual(C.render_transcript(turns), "Assistant: ¿Te bañaste hoy?\nUser: Sí.")
+
+    def test_loaded_cases_expose_turns_and_no_prompt(self):
+        cases = C.load_all_cases(ROOT / "tests")
+        self.assertIsNone(cases["echo_spanish_yes_no_answer"]["prompt"])
+        self.assertEqual(cases["echo_spanish_yes_no_answer"]["turns"][-1], {"role": "user", "text": "Sí."})
+        self.assertEqual(cases["echo_emotional_disclosure"]["prompt"], "Estoy triste porque discutí con mi pareja.")
+
+
 class RegressionFile(unittest.TestCase):
     def test_real_file_is_valid(self):
         self.assertEqual(C.validate_regression_file(REAL_REGRESSION), [])
@@ -100,8 +163,8 @@ class RegressionFile(unittest.TestCase):
         for case in REAL_REGRESSION["regressions"]:
             if case.get("manual"):
                 continue
-            self.assertNotIn("(No mention", case["prompt"], case["id"])
-            self.assertNotRegex(case["prompt"], r"^\(Turn", case["id"])
+            self.assertNotIn("(No mention", case.get("prompt", ""), case["id"])
+            self.assertNotRegex(case.get("prompt", ""), r"^\(Turn", case["id"])
 
 
 class Loading(unittest.TestCase):

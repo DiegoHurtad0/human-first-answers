@@ -4,6 +4,11 @@ All notable changes are recorded here. The format follows [Keep a Changelog](htt
 
 ## [Unreleased]
 
+### Added
+- Conversation continuity without echoing: new `references/conversation-continuity.md`, a core-contract rule in `SKILL.md`, and short pointers in `natural-conversation.md` and `context-adaptation.md`. Repetition stays where it protects the user (safety, consequential confirmations, corrections, requested summaries).
+- Case schema: optional `turns` (a scripted transcript ending on a user turn) as an alternative to `prompt`. Such cases must be `manual: true`; the runner cannot replay scripted assistant turns. `run_evaluation.py --show-manual` prints them for human review.
+- Eight evaluation cases (4 automated, 4 manual) and ten regression cases (3 automated, 7 manual) for echoing, short replies, corrections, topic changes, and useful repetition. New required category `conversation_continuity`, and a coverage rule of one scripted multi-turn case per language (en, es).
+
 ### Fixed
 - CI: the Python 3.9 job failed before running any project code because `actions/setup-python` has no Python 3.9 build for Ubuntu 26.04. The workflow now pins explicit pairs: Python 3.9 on `ubuntu-24.04`, Python 3.12 on `ubuntu-26.04`.
 

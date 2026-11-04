@@ -103,6 +103,75 @@ class SizeAndPortability(unittest.TestCase):
         self.assertIn("Do not use it for", text)
 
 
+class ConversationContinuity(unittest.TestCase):
+    TEXT = REFS["conversation-continuity.md"]
+
+    def test_skill_makes_it_part_of_the_contract_and_loads_the_reference(self):
+        contract = section(SKILL, "Core contract")
+        self.assertIn("do not echo it", contract)
+        self.assertIn("references/conversation-continuity.md", contract)
+        self.assertIn("conversation-continuity.md", section(SKILL, "Workflow"))
+        self.assertIn("conversation-continuity.md", section(SKILL, "Reference loading"))
+
+    def test_skill_does_not_duplicate_the_reference(self):
+        self.assertLess(SKILL.count("echo"), 4)
+
+    def test_sibling_references_point_to_the_owner_instead_of_copying_it(self):
+        for name in ("natural-conversation.md", "context-adaptation.md"):
+            self.assertIn("conversation-continuity.md", REFS[name], name)
+            self.assertNotIn("Ah, perfecto", REFS[name], name)
+
+    def test_short_reply_vocabulary_is_covered_in_both_languages(self):
+        for phrase in ("Sí.", "No.", "Claro.", "Exactamente.", "Ya veo.", "Puede ser.", "No estoy seguro.", "Ahorita te digo.",
+                       "Yes.", "Sure.", "Exactly.", "I see.", "Maybe.", "I'm not sure.", "I'll let you know."):
+            self.assertIn(phrase, self.TEXT, phrase)
+
+    def test_automatic_questioning_is_rejected_as_a_fix(self):
+        self.assertIn("replacing an echo with an automatic question fixes nothing", self.TEXT)
+        self.assertIn("a rule that every answer needs another question", self.TEXT)
+
+    def test_useful_repetition_is_preserved(self):
+        for fragment in ("Safety", "Confirmation of a consequential action", "disambiguation", "summary or read-back the user asked for",
+                         "Never drop a protective confirmation"):
+            self.assertIn(fragment, self.TEXT, fragment)
+
+    def test_no_invented_capability(self):
+        self.assertIn("Never invent an action or a capability", self.TEXT)
+
+    def test_other_modes_and_contexts_are_respected(self):
+        self.assertIn("ADHD mode", self.TEXT)
+        self.assertIn("not echo; keep it", self.TEXT)
+        self.assertIn("strict output formats", self.TEXT)
+        self.assertIn("Instruction precedence", self.TEXT)
+
+    def test_paraphrasing_and_acknowledgment_are_not_universally_banned(self):
+        self.assertIsNone(re.search(r"(?i)\b(never|always) (repeat|paraphrase|restate|acknowledge|ask)\b", self.TEXT))
+        self.assertIn("A brief acknowledgment is often the best reply", self.TEXT)
+
+    def test_required_regression_scenarios_exist_with_honest_manual_flags(self):
+        import case_schema
+        cases = case_schema.load_all_cases(ROOT / "tests")
+        manual = {"echo_spanish_yes_no_answer", "echo_english_yes_no_answer", "echo_short_confirmation_after_offer",
+                  "continuity_multi_turn_advances", "continuity_follow_up_uses_prior_context",
+                  "continuity_correction_updates_state", "continuity_topic_change_drops_old_topic"}
+        automated = {"echo_emotional_disclosure", "repetition_confirms_consequential_action",
+                     "repetition_is_right_when_summary_requested"}
+        for cid in manual:
+            self.assertTrue(cases[cid]["manual"] and cases[cid]["turns"], cid)
+        for cid in automated:
+            self.assertFalse(cases[cid]["manual"], cid)
+            self.assertTrue(cases[cid]["prompt"], cid)
+        self.assertEqual(len(manual | automated), 10)
+
+    def test_both_languages_have_a_yes_no_case_and_neither_requires_a_reflex_question(self):
+        import case_schema
+        cases = case_schema.load_all_cases(ROOT / "tests")
+        self.assertEqual(cases["echo_spanish_yes_no_answer"]["language"], "es")
+        self.assertEqual(cases["echo_english_yes_no_answer"]["language"], "en")
+        for cid in ("echo_spanish_yes_no_answer", "continuity_short_answer_no_reflex_question_es"):
+            self.assertTrue(any("unless" in x or "only" in x or "when_useful" in x for x in cases[cid]["expected"]), cid)
+
+
 class CiWorkflow(unittest.TestCase):
     """The workflow is read as data; these tests do not prove GitHub runs it successfully."""
 
