@@ -172,6 +172,58 @@ class ConversationContinuity(unittest.TestCase):
             self.assertTrue(any("unless" in x or "only" in x or "when_useful" in x for x in cases[cid]["expected"]), cid)
 
 
+class ResponseRelevance(unittest.TestCase):
+    TEXT = REFS["response-relevance.md"]
+
+    def test_skill_states_the_rule_and_loads_the_reference(self):
+        self.assertIn("references/response-relevance.md", section(SKILL, "Core contract"))
+        self.assertIn("response-relevance.md", section(SKILL, "Workflow"))
+        self.assertIn("response-relevance.md", section(SKILL, "Reference loading"))
+
+    def test_four_kinds_of_information_are_distinguished(self):
+        for fragment in ("Needs a response", "Needs only to be understood", "Must be confirmed", "Adds nothing if repeated"):
+            self.assertIn(fragment, self.TEXT, fragment)
+
+    def test_confirmations_and_obligations_are_not_banned(self):
+        for fragment in ("Restate the date, amount, or terms", "The principle is judgment, not a ban",
+                         "keep it and keep it short", "explicitly asked for a commitment"):
+            self.assertIn(fragment, self.TEXT, fragment)
+
+    def test_drafting_and_editing_are_distinguished(self):
+        self.assertIn("Drafting a new reply", self.TEXT)
+        self.assertIn("Editing a reply the user wrote", self.TEXT)
+        self.assertIn("response-relevance.md", REFS["revising-text.md"])
+        self.assertIn("protected", REFS["revising-text.md"].lower())
+
+    def test_echo_and_carryover_are_kept_separate(self):
+        self.assertIn("response-relevance.md", REFS["conversation-continuity.md"])
+        self.assertIn("different habit", REFS["conversation-continuity.md"])
+        self.assertIn("separate habits", self.TEXT)
+
+    def test_context_adaptation_points_to_owner_without_copying_examples(self):
+        self.assertIn("response-relevance.md", REFS["context-adaptation.md"])
+        self.assertNotIn("bank account", REFS["context-adaptation.md"])
+
+    def test_both_languages_have_examples(self):
+        self.assertIn("Incoming (en)", self.TEXT)
+        self.assertIn("Incoming (es)", self.TEXT)
+
+    def test_cases_cover_both_languages_and_both_directions(self):
+        import case_schema
+        cases = case_schema.load_all_cases(ROOT / "tests")
+        rel = {k: v for k, v in cases.items() if k.startswith("relevance_")}
+        self.assertGreaterEqual(len(rel), 16)
+        for cid, case in rel.items():
+            self.assertFalse(case["manual"], cid)
+            self.assertTrue(case["prompt"], cid)
+        self.assertTrue({c["language"] for c in rel.values()} >= {"en", "es"})
+        # Brevity cases and cases where the detail must survive both exist.
+        for cid in ("relevance_unneeded_commitment_en", "relevance_legitimate_confirmation_en",
+                    "relevance_legitimate_confirmation_es", "relevance_requested_commitment_en",
+                    "relevance_edit_preserves_commitment_en", "relevance_editing_preserves_commitment_es"):
+            self.assertIn(cid, rel)
+
+
 class CiWorkflow(unittest.TestCase):
     """The workflow is read as data; these tests do not prove GitHub runs it successfully."""
 

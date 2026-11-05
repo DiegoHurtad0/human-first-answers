@@ -637,3 +637,142 @@ cases:
       - ah_fuiste_a_visitar_a_tus_papas
       - generic_praise_only
       - several_questions
+
+  # --- response relevance (drafted replies) ---
+  - id: relevance_payment_notice_en
+    language: en
+    category: response_relevance
+    intent: draft_reply_to_payment_notification
+    prompt: |
+      Draft my reply (I'm Diego) to this email:
+
+      Hi Diego, today we made the payment for this invoice. If it is not reflected in your bank account within the next 3 business days, please do not hesitate to contact us. Payments are made within the first 10 business days of the month once the invoice is received. If you need any other assistance, please contact us. Regards
+    expected:
+      - brief_thanks_for_the_payment
+      - no_promise_to_monitor_the_account_or_report_back
+      - one_expression_of_thanks_not_two
+      - ready_to_send
+    failure_modes:
+      - promises_to_check_the_bank_account_and_report_in_3_days
+      - restates_the_payment_schedule_or_the_3_day_window
+      - thanks_twice
+      - adds_meta_commentary_about_the_draft
+
+  - id: relevance_signed_contract_es
+    language: es
+    category: response_relevance
+    intent: draft_reply_to_acknowledge_delivery
+    prompt: |
+      Redacta mi respuesta (soy Diego) a este correo:
+
+      Hola Diego, adjunto el contrato firmado. Cualquier duda, quedo atento. Saludos, Laura
+    expected:
+      - acknowledge_receipt_in_a_line_or_two
+      - no_promise_to_review_or_follow_up
+      - natural_professional_spanish
+    failure_modes:
+      - promises_to_review_and_confirm
+      - repeats_that_the_contract_was_signed_and_attached
+      - double_thanks
+      - ceremonial_closing_paragraph
+
+  - id: relevance_recruiter_no_commitment_en
+    language: en
+    category: response_relevance
+    intent: draft_reply_to_recruiter
+    prompt: |
+      Write my reply to this recruiter message. I'm interested.
+
+      "Hi, I'm Sam from Northwind. We liked your profile and will send the interview invitation by Friday. Feel free to ask if you have any questions about the process."
+    expected:
+      - express_interest_and_thanks_briefly
+      - no_invented_availability_or_questions
+      - no_restating_the_friday_timeline_as_a_commitment
+    failure_modes:
+      - invents_availability_or_salary_expectations
+      - promises_to_watch_for_the_invitation_on_friday
+      - asks_made_up_questions_about_the_process
+      - long_enthusiastic_paragraph
+
+  - id: relevance_meeting_confirmation_keeps_details_en
+    language: en
+    category: response_relevance
+    intent: legitimate_confirmation
+    prompt: |
+      Reply yes to this and confirm for me:
+
+      "Can we meet Thursday, March 14 at 3:00 PM at the Madrid office? Please confirm so I can book the room."
+    expected:
+      - confirm_yes
+      - restate_thursday_march_14_3pm_and_madrid_because_confirmation_was_requested
+      - brief
+    failure_modes:
+      - vague_confirmation_without_day_time_or_place
+      - changes_the_date_or_time
+      - adds_unrequested_commitments
+      - long_preamble
+
+  - id: relevance_ambiguous_date_confirms_es
+    language: es
+    category: response_relevance
+    intent: ambiguity_requires_clarification
+    prompt: |
+      Contesta este mensaje por mí, estoy disponible el viernes:
+
+      "Hola, ¿podemos vernos el viernes 15 o el viernes 22? Dime cuál te va mejor."
+    expected:
+      - the_prompt_gives_availability_only_for_viernes_without_a_date_so_flag_or_ask_which_friday
+      - do_not_guess_between_15_and_22
+      - short_draft_or_one_short_question
+    failure_modes:
+      - silently_picks_the_15th_or_the_22nd
+      - long_explanation_of_the_ambiguity
+      - invents_the_users_calendar
+
+  - id: relevance_casual_message_es
+    language: es
+    category: response_relevance
+    intent: casual_reply_without_extra_promises
+    prompt: |
+      Mi amigo me escribió: "Ya llegué a casa, estuvo bien la reunión. Si necesito algo te aviso." ¿Qué le contesto?
+    expected:
+      - one_short_natural_line
+      - no_offer_or_promise_beyond_what_was_said
+    failure_modes:
+      - restates_that_he_arrived_home_and_the_meeting_went_well
+      - promises_to_be_available_or_to_check_in
+      - several_questions
+      - formal_register
+
+  - id: relevance_requested_commitment_en
+    language: en
+    category: response_relevance
+    intent: user_requested_commitment
+    prompt: |
+      Write a short reply to my manager. Say I'll send the Q3 report by Friday at noon.
+    expected:
+      - include_the_report_and_the_friday_noon_deadline_exactly
+      - brief_and_ready_to_send
+      - no_additional_commitments
+    failure_modes:
+      - omits_or_softens_the_deadline_to_avoid_a_commitment
+      - changes_friday_noon
+      - adds_extra_promises_such_as_a_follow_up_call
+      - long_preamble
+
+  - id: relevance_edit_preserves_commitment_en
+    language: en
+    category: response_relevance
+    intent: editing_keeps_the_users_commitment
+    prompt: |
+      Tighten this reply without changing what it says:
+
+      "Thanks for confirming the payment. I'll check my account on Monday and let you know if I don't see it. Thanks again for your help."
+    expected:
+      - keep_the_monday_check_commitment
+      - may_trim_wording_only
+      - may_note_in_one_line_that_the_commitment_could_be_cut_if_unneeded
+    failure_modes:
+      - deletes_the_monday_commitment_silently
+      - changes_the_day_or_the_commitment
+      - rewrites_the_whole_message

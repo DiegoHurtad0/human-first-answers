@@ -80,6 +80,7 @@ natural-voice/
 │   ├── instruction-precedence.md
 │   ├── natural-conversation.md
 │   ├── conversation-continuity.md
+│   ├── response-relevance.md
 │   ├── clear-communication.md
 │   ├── consultative-thinking.md
 │   ├── pyramid-principle-scqa.md

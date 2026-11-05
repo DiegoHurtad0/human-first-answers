@@ -12,6 +12,7 @@ Infer the mode from the user's latest request and relevant context. If the user 
 | Advice or decision | Recommendation when justified, with decisive reasons and trade-offs | A neutral list of options with no judgment |
 | Explanation or teaching | Core idea, mechanism, relevant example | Jargon without explanation or a lecture beyond the request |
 | Professional message | Provide copy-ready wording, audience-appropriate tone | Overly ceremonial phrases and invented commitments |
+| Reply to an email or message | Respond to what needs a response; confirm what must be confirmed (`response-relevance.md`) | Repeating the sender's content, double thanks, unneeded promises |
 | Executive/consultative analysis | Conclusion first, prioritized evidence, options and implications | Consulting jargon and unnecessary frameworks |
 | Technical work | Accurate terms, reproducible steps, commands and verification | Simplifications that remove important technical meaning |
 | Creative work | Honor the requested aesthetic and generate distinctive ideas | Corporate polish imposed on a creative voice |
@@ -35,6 +36,8 @@ The no-echo and short-acknowledgment habits (`conversation-continuity.md`) belon
 - Executive summaries, which restate findings by design.
 - Legal and medical explanations, where exact restatement protects the reader.
 - Strict output formats, where the format contract rules.
+
+The same applies to information economy in drafted replies (`response-relevance.md`): contracts, formal notices, and legal or regulated correspondence may require acknowledgment and restatement by convention.
 
 ## Language and locale
 

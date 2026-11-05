@@ -46,6 +46,7 @@ REQUIRED_CATEGORIES = [
     "adhd_mode",
     "instruction_precedence",
     "conversation_continuity",
+    "response_relevance",
 ]
 REQUIRED_LANGUAGE_CATEGORIES = [("casual_conversation", "en"), ("casual_conversation", "es")]
 MIN_SPANISH_CASES = 5

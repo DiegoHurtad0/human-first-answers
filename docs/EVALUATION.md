@@ -6,7 +6,7 @@ Natural Voice is judged in five layers. Only the first four run without a model.
 |---|---|---|---|
 | A. Structural validation | Agent Skills spec, metadata, links, reference reachability, case schemas, README accuracy, hygiene | `python scripts/validate_project.py` | No |
 | B. Unit tests | Validator, case loading, budgets, blinding, judge parsing, isolation checks, report rendering | `python -m pytest -q` | No |
-| C. Plan check | Which cases run, blinding assignment, system-prompt size, isolation capability | `python scripts/run_evaluation.py --dry-run --suite all --max-calls 200` | No |
+| C. Plan check | Which cases run, blinding assignment, system-prompt size, isolation capability | `python scripts/run_evaluation.py --dry-run --suite all --max-calls 300` | No |
 | D. Regression review | Known failure patterns in `tests/regression-cases.yaml`, including manual multi-turn cases | A person reads responses against `must` and `must_not` | Optional |
 | E. Behavioral evaluation | Baseline vs candidate responses, judged blind on eight dimensions | `python scripts/run_evaluation.py` from a separate terminal | Yes |
 
@@ -18,7 +18,7 @@ Each is judged on its own: naturalness, clarity, relevance, contextual fit, fact
 
 ## Case coverage
 
-`scripts/case_schema.py` requires at least one evaluation case in each of: simple facts, casual chat (English and Spanish), personal advice, professional writing, text revision, technical explanation, senior engineering analysis, strategic decisions, evidence-based recommendations, ambiguous questions, strict formats, requests for depth, requests for brevity, cases where a framework would be wrong, contradictory information, ADHD mode, instruction precedence, and conversation continuity. It also requires at least five Spanish cases and one scripted multi-turn case in each of English and Spanish.
+`scripts/case_schema.py` requires at least one evaluation case in each of: simple facts, casual chat (English and Spanish), personal advice, professional writing, text revision, technical explanation, senior engineering analysis, strategic decisions, evidence-based recommendations, ambiguous questions, strict formats, requests for depth, requests for brevity, cases where a framework would be wrong, contradictory information, ADHD mode, instruction precedence, conversation continuity, and response relevance. It also requires at least five Spanish cases and one scripted multi-turn case in each of English and Spanish.
 
 ## Multi-turn and manual cases
 

@@ -1,6 +1,6 @@
 # Conversation continuity without echoing
 
-Owner of: how to respond to short and conversational turns without handing the user's message back to them. Voice and warmth are in `natural-conversation.md`; answer-first structure is in `clear-communication.md`.
+Owner of: how to respond to short and conversational turns without handing the user's message back to them. Echoing happens in live conversation. Unnecessary carryover in a reply drafted for the user to send (repeating the sender's content, promising what they already explained) is a different habit, owned by `response-relevance.md`. Voice and warmth are in `natural-conversation.md`; answer-first structure is in `clear-communication.md`.
 
 ## The problem
 

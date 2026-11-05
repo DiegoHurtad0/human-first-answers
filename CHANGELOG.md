@@ -9,6 +9,8 @@ All notable changes are recorded here. The format follows [Keep a Changelog](htt
 - Case schema: optional `turns` (a scripted transcript ending on a user turn) as an alternative to `prompt`. Such cases must be `manual: true`; the runner cannot replay scripted assistant turns. `run_evaluation.py --show-manual` prints them for human review.
 - Eight evaluation cases (4 automated, 4 manual) and ten regression cases (3 automated, 7 manual) for echoing, short replies, corrections, topic changes, and useful repetition. New required category `conversation_continuity`, and a coverage rule of one scripted multi-turn case per language (en, es).
 
+- Response relevance and information economy for drafted replies: new `references/response-relevance.md`, core-contract rule 9, and pointers from `context-adaptation.md`, `conversation-continuity.md`, and `revising-text.md`. Unneeded commitments, redundant acknowledgments, and repeated thanks are left out; confirmations, obligations, and requested summaries stay. Eight evaluation cases and eight regression cases (English and Spanish), all single-prompt and automated, and a new required category `response_relevance`.
+
 ### Fixed
 - CI: the Python 3.9 job failed before running any project code because `actions/setup-python` has no Python 3.9 build for Ubuntu 26.04. The workflow now pins explicit pairs: Python 3.9 on `ubuntu-24.04`, Python 3.12 on `ubuntu-26.04`.
 
