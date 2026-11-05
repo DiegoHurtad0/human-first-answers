@@ -108,46 +108,75 @@ natural-voice/
     └── case_schema.py
 ```
 
-## Install
+## Supported AI Assistants
 
-The specification requires the skill directory to be named after the skill (`natural-voice`). This repository is named `human-first-answers`, so clone it into a directory with the skill name.
+Natural Voice is one canonical skill (`SKILL.md` and `references/`). It has no per-assistant rule sets and needs no adapter files: every assistant below reads the same folder. Support was checked against each vendor's documentation on 2026-11-05. **No assistant has been install-tested or behavior-tested**, so every row is documentation-verified only.
 
-### Claude Code
+| Assistant | Status | Personal path | Project path | Invoke |
+|---|---|---|---|---|
+| GitHub Copilot (CLI, cloud agent, IDE agent mode; IDE support varies by version) | Documented, untested | `~/.copilot/skills/natural-voice` or `~/.agents/skills/natural-voice` | `.github/skills/`, `.claude/skills/`, or `.agents/skills/` + `natural-voice` | Automatic when relevant, or name it in the prompt: "Use the /natural-voice skill to ..." |
+| Claude Code | Documented, untested | `~/.claude/skills/natural-voice` | `.claude/skills/natural-voice` | Automatic from the description, or `/natural-voice` |
+| OpenAI Codex (CLI, IDE extension) | Documented, untested | `$HOME/.agents/skills/natural-voice` | `.agents/skills/natural-voice` | Automatic from the description, or `$natural-voice` / `/skills` |
+| Gemini CLI | Documented, untested | `~/.gemini/skills/natural-voice` or `~/.agents/skills/natural-voice` | `.gemini/skills/` or `.agents/skills/` + `natural-voice` | Automatic (the model calls `activate_skill`; you approve a prompt) |
+| Other Agent Skills hosts | Untested | See that host's documentation | See that host's documentation | Host-specific |
 
-Personal skill (all projects), per the [Claude Code skills documentation](https://code.claude.com/docs/en/skills):
+`~/.agents/skills/` is documented for Copilot, Codex, and Gemini CLI. Claude Code documents only `.claude/skills/`. Paths and behavior can change; the vendor documentation wins over this table:
+[Copilot](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills), [Claude Code](https://code.claude.com/docs/en/skills), [Codex](https://learn.chatgpt.com/docs/build-skills), [Gemini CLI](https://geminicli.com/docs/cli/skills/).
 
-```bash
-git clone https://github.com/DiegoHurtad0/human-first-answers.git ~/.claude/skills/natural-voice
-```
+### Naming: repository versus skill
 
-For one repository, clone into `.claude/skills/natural-voice` inside it. Claude Code also accepts a symlink to a checkout elsewhere:
+The repository is `human-first-answers`. The skill is `natural-voice`, and the Agent Skills specification requires the skill directory to carry the skill's name. **Always clone into a directory named `natural-voice`**, as every command below does. A folder named `human-first-answers` violates the specification; how each host reacts is not documented and is untested.
 
-```bash
-ln -s /path/to/your/checkout ~/.claude/skills/natural-voice
-```
-
-Claude Code loads the skill when its description matches the task, and exposes it as `/natural-voice`. Start a new session if it does not appear.
-
-### Codex
-
-Per the [Codex skills documentation](https://learn.chatgpt.com/docs/build-skills), user-level skills live in `$HOME/.agents/skills` and repository skills in `.agents/skills`:
+### Recommended: one personal install for every assistant
 
 ```bash
 git clone https://github.com/DiegoHurtad0/human-first-answers.git ~/.agents/skills/natural-voice
 ```
 
-Codex follows symlinked skill folders and detects changes automatically; restart it if an update does not appear.
-
-### Other hosts
-
-Any host that implements the Agent Skills specification should accept the folder in its skills location. Other hosts have not been tested. Check that host's documentation for the path.
-
-### Verify the install
+That folder serves Copilot, Codex, and Gemini CLI. Add Claude Code with a symlink (Claude Code follows symlinks):
 
 ```bash
-python3 -m pip install -r requirements-dev.txt
-python3 scripts/validate_project.py --root ~/.claude/skills/natural-voice --strict-install
+mkdir -p ~/.claude/skills
+ln -s ~/.agents/skills/natural-voice ~/.claude/skills/natural-voice
 ```
+
+Update with `git -C ~/.agents/skills/natural-voice pull`.
+
+### Install for one project
+
+Run from the project root. This vendors a copy that you commit; it is not linked to updates.
+
+```bash
+git clone --depth 1 https://github.com/DiegoHurtad0/human-first-answers.git .agents/skills/natural-voice
+rm -rf .agents/skills/natural-voice/.git
+```
+
+Use `.claude/skills/natural-voice` instead for Claude Code, or `.github/skills/natural-voice` for Copilot. Copilot also reads `.claude/skills` and `.agents/skills`, and Gemini CLI also reads `.gemini/skills`.
+
+### Activate and verify, by assistant
+
+- **GitHub Copilot CLI:** start a session (or run `/skills reload`), then `/skills info natural-voice`. `/skills list` shows all skills. Personal skills are not automatically available to the cloud agent; commit a project copy for that.
+- **Claude Code:** type `/` and look for `natural-voice`, or ask a drafting question that matches the description. New top-level skills directories need `/reload-skills` or a new session.
+- **Codex:** run `/skills` or type `$` and look for `natural-voice`. Restart Codex if a new install does not appear.
+- **Gemini CLI:** `/skills list` (or `gemini skills list --all` in a terminal). When a task matches, Gemini asks you to approve activating the skill. Its documentation notes a transition to Antigravity CLI for some account types; check which tool you run.
+- **Any host, structural check:**
+
+  ```bash
+  python3 -m pip install -r requirements-dev.txt
+  python3 scripts/validate_project.py --root ~/.agents/skills/natural-voice --strict-install
+  ```
+
+  This proves the folder is well formed and named correctly. It does not prove the host loaded it.
+
+### Installing the skill is not sharing a URL
+
+| What you do | What it does |
+|---|---|
+| Paste the repository URL into a chat | The assistant may read the page once if it can browse. Nothing is installed, and nothing is loaded in later conversations. |
+| Install the skill (the commands above) | The host discovers `SKILL.md` in a skills directory. Whether it loads automatically, needs your approval, or needs an explicit mention depends on the host. |
+| Repository custom instructions (for example a Copilot instructions file or an `AGENTS.md`) | Always-on text for one repository or user. It is a different mechanism with a different lifetime. Natural Voice does not ship one, so there is a single source of behavior. |
+
+`gh skill install` and `gemini skills install <git-url>` exist, but their documentation describes repositories that keep skills under `skills/<name>/`. This repository keeps the skill at its root, and the documentation does not say that works, so the commands above use a plain `git clone`.
 
 ## Using it
 

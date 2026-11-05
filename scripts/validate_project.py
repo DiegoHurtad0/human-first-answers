@@ -244,6 +244,41 @@ def readme_layout_paths(text: str) -> list[str]:
     return paths
 
 
+HOST_NAMES = re.compile(r"\b(claude(?: code)?|anthropic|codex|openai|chatgpt|copilot|gemini|cursor|windsurf|antigravity)\b", re.I)
+
+
+def check_host_neutrality(root: Path, report: Report) -> None:
+    """The behavioral contract (SKILL.md and references/) must not name an assistant product.
+
+    Platform specifics belong in the README and docs. Naming a host in the rules invites a
+    forked, host-specific rule set.
+    """
+    files = [root / "SKILL.md"] + sorted((root / "references").glob("*.md")) if (root / "references").is_dir() else [root / "SKILL.md"]
+    for path in files:
+        text = path.read_text(encoding="utf-8", errors="replace") if path.exists() else ""
+        for number, line in enumerate(text.splitlines(), 1):
+            match = HOST_NAMES.search(line)
+            if match:
+                report.error(f"{path.relative_to(root)}:{number}: names the assistant {match.group(0)!r}; keep the behavioral contract host-neutral")
+
+
+INSTALL_COMMAND = re.compile(r"^\s*(?:git clone\b.*|ln -s\b.*)$", re.M)
+
+
+def check_install_docs(root: Path, report: Report) -> None:
+    """Every clone or symlink command in the README must install into a directory named after the skill."""
+    text = read_text(root / "README.md", report)
+    if text is None:
+        return
+    commands = [m.group(0).strip() for m in INSTALL_COMMAND.finditer(text)]
+    if not commands:
+        report.error("README.md: no install commands found (git clone or ln -s)")
+    for command in commands:
+        destination = command.split()[-1].rstrip("/")
+        if destination.split("/")[-1] != "natural-voice":
+            report.error(f"README.md: install command {command!r} does not target a directory named 'natural-voice'")
+
+
 def check_readme(root: Path, report: Report) -> None:
     text = read_text(root / "README.md", report)
     if text is None:
@@ -333,7 +368,9 @@ def validate(root: Path, strict_install: bool = False, project_files: bool = Tru
         check_reachability(root, skill_text, report)
     check_rubric(root, report)
     check_links(root, report)
+    check_host_neutrality(root, report)
     if project_files:
+        check_install_docs(root, report)
         check_required_files(root, report)
         check_license(root, skill_text, report)
         check_readme(root, report)

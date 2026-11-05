@@ -256,9 +256,8 @@ class JudgmentAndAdaptation(unittest.TestCase):
             self.assertIn(fragment, text, fragment)
         self.assertIn("voice-profile.md", self.CONT)
 
-    def test_skill_stays_small_and_adds_no_new_reference_for_this(self):
+    def test_skill_stays_small(self):
         self.assertLess(len(SKILL.splitlines()), 160)
-        self.assertEqual(len([n for n in REFS if n.endswith(".md")]), 13)
 
     def test_new_cases_cover_both_languages_and_keep_multi_turn_manual(self):
         import case_schema

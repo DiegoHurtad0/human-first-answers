@@ -54,6 +54,8 @@ The host's own hierarchy always wins. Within the skill's reach the order is: saf
 
 **D7. YAML through PyYAML only.** The earlier hand-written parser handled one file's shape and could disagree with real YAML tooling. Validation now fails closed without PyYAML. The skill itself has no dependencies; only the development tools do.
 
+**D8. Dry runs never need a model.** `run_evaluation.py --dry-run` prints the plan and the blinding without touching the network and reports whether a live run would be blocked.
+
 **D9. Continuity is a separate module, not more tone rules.** Echoing is a turn-level behavior (what to do with a message), distinct from voice (how it sounds). `natural-conversation.md` keeps a short pointer; the patterns, examples, and the cases where repetition is correct live only in `conversation-continuity.md`. Repetition is never banned: safety, consequential confirmations, corrections, and requested summaries keep it, and instruction precedence still applies.
 
 **D10. Scripted multi-turn cases are manual.** A case may carry `turns` (a transcript ending on a user turn) instead of `prompt`. The runner sends one prompt and cannot replay scripted assistant turns, so `turns` requires `manual: true` and the schema enforces it. `run_evaluation.py --show-manual` prints these cases for a reviewer who replays them in a real conversation. Flattening a transcript into one prompt is not equivalent and is not done.
@@ -62,7 +64,10 @@ The host's own hierarchy always wins. Within the skill's reach the order is: saf
 
 **D12. No new reference file for intent, restraint, proportion, or feedback.** Implicit intent and restraint are turn-level judgments, so they extend `conversation-continuity.md` (message function, reply completeness). Proportion extends `clear-communication.md`. Task-scoped corrections extend `voice-profile.md`, which already owns the one-correction-is-not-a-personality rule. Register and boilerplate extend `response-relevance.md`. `SKILL.md` gained clauses in existing items, not new items.
 
-**D8. Dry runs never need a model.** `run_evaluation.py --dry-run` prints the plan and the blinding without touching the network and reports whether a live run would be blocked.
+**D13. No platform adapters.** Every investigated host discovers a standard `SKILL.md` folder, so no Copilot instructions file, Codex agent-metadata file, or Gemini context file was added. An adapter would either duplicate the behavioral rules (a fork to maintain) or merely point at the skill (no gain). Add one only for a verified compatibility problem, and have it reference `SKILL.md` instead of restating rules.
+
+**D14. The contract is host-neutral.** `validate_project.py` rejects assistant product names in `SKILL.md` and `references/`, and rejects README install commands that do not target a directory named `natural-voice`. Platform paths and commands live only in the README and docs.
+
 
 ## Security
 
@@ -76,5 +81,6 @@ The host's own hierarchy always wins. Within the skill's reach the order is: saf
 
 - Specification compliance is checked, not assumed: allowed frontmatter fields only, `metadata` as string-to-string, name rules, description and size limits.
 - The specification requires the skill directory to match `name`. This repository's checkout directory is `human-first-answers`; install it under the name `natural-voice` (see the README). `validate_project.py --strict-install` enforces this on an installed copy.
-- Claude Code and Codex are the hosts whose install paths were checked against their documentation on 2026-11-03. Other hosts that implement the Agent Skills specification should work but are untested.
+- GitHub Copilot, Claude Code, Codex, and Gemini CLI were checked against their vendor documentation on 2026-11-05. All four document `SKILL.md` folders. `~/.agents/skills/` and `.agents/skills/` are documented for Copilot, Codex, and Gemini CLI; Claude Code documents only `.claude/skills/` (symlink to share one install). None was install-tested or behavior-tested, so the README labels them "Documented, untested".
+- `gh skill install` and `gemini skills install <url>` document discovery of `skills/<name>/SKILL.md` layouts. This repository keeps the skill at its root, which their documentation does not cover, so they are not recommended until tested.
 - Where a capability is missing (memory, files, tools), the skill degrades to conversation-scoped behavior.
