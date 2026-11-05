@@ -125,33 +125,35 @@ Natural Voice is one canonical skill (`SKILL.md` and `references/`). It has no p
 
 ### Naming: repository versus skill
 
-The repository is `human-first-answers`. The skill is `natural-voice`, and the Agent Skills specification requires the skill directory to carry the skill's name. **Always clone into a directory named `natural-voice`**, as every command below does. A folder named `human-first-answers` violates the specification; how each host reacts is not documented and is untested.
+The repository is `human-first-answers`. The skill is `natural-voice`, and the Agent Skills specification requires the skill directory to carry the skill's name. **Always clone into a directory named `natural-voice`**, as every command below does. A folder named `human-first-answers` violates the specification. The Agent Skills client guide says lenient hosts warn and still load a skill whose name differs from its folder, but strict hosts may refuse it, and none of the four hosts above documents which it does. Do not rely on either.
 
 ### Recommended: one personal install for every assistant
 
 ```bash
+mkdir -p ~/.agents/skills
 git clone https://github.com/DiegoHurtad0/human-first-answers.git ~/.agents/skills/natural-voice
 ```
 
-That folder serves Copilot, Codex, and Gemini CLI. Add Claude Code with a symlink (Claude Code follows symlinks):
+That folder serves Copilot, Codex, and Gemini CLI. Add Claude Code with a symlink (Claude Code documents symlink support; Copilot and Gemini CLI do not, so only the `.claude` entry is a link and the real folder stays under `.agents`):
 
 ```bash
 mkdir -p ~/.claude/skills
 ln -s ~/.agents/skills/natural-voice ~/.claude/skills/natural-voice
 ```
 
-Update with `git -C ~/.agents/skills/natural-voice pull`.
+If `~/.agents/skills/natural-voice` already exists, the clone stops with an error. Update an existing install with `git -C ~/.agents/skills/natural-voice pull`.
 
 ### Install for one project
 
 Run from the project root. This vendors a copy that you commit; it is not linked to updates.
 
 ```bash
+mkdir -p .agents/skills
 git clone --depth 1 https://github.com/DiegoHurtad0/human-first-answers.git .agents/skills/natural-voice
 rm -rf .agents/skills/natural-voice/.git
 ```
 
-Use `.claude/skills/natural-voice` instead for Claude Code, or `.github/skills/natural-voice` for Copilot. Copilot also reads `.claude/skills` and `.agents/skills`, and Gemini CLI also reads `.gemini/skills`.
+Use `.claude/skills/natural-voice` instead for Claude Code, or `.github/skills/natural-voice` for Copilot. Copilot also reads `.claude/skills` and `.agents/skills`, and Gemini CLI also reads `.gemini/skills`. Hosts may load project skills only after you trust the project folder.
 
 ### Activate and verify, by assistant
 
@@ -159,14 +161,15 @@ Use `.claude/skills/natural-voice` instead for Claude Code, or `.github/skills/n
 - **Claude Code:** type `/` and look for `natural-voice`, or ask a drafting question that matches the description. New top-level skills directories need `/reload-skills` or a new session.
 - **Codex:** run `/skills` or type `$` and look for `natural-voice`. Restart Codex if a new install does not appear.
 - **Gemini CLI:** `/skills list` (or `gemini skills list --all` in a terminal). When a task matches, Gemini asks you to approve activating the skill. Its documentation notes a transition to Antigravity CLI for some account types; check which tool you run.
-- **Any host, structural check:**
+- **Any host, structural check.** It works from any directory because it uses the installed path. For a project install, run it from the project root and set `SKILL=.agents/skills/natural-voice` instead.
 
   ```bash
-  python3 -m pip install -r requirements-dev.txt
-  python3 scripts/validate_project.py --root ~/.agents/skills/natural-voice --strict-install
+  SKILL=~/.agents/skills/natural-voice
+  python3 -m pip install -r "$SKILL/requirements-dev.txt"
+  python3 "$SKILL/scripts/validate_project.py" --root "$SKILL" --strict-install
   ```
 
-  This proves the folder is well formed and named correctly. It does not prove the host loaded it.
+  If pip reports an externally managed environment, create and activate a virtual environment first (`python3 -m venv ~/.natural-voice-venv && . ~/.natural-voice-venv/bin/activate`). This check proves the folder is well formed and named correctly. It does not prove the host loaded it.
 
 ### Installing the skill is not sharing a URL
 

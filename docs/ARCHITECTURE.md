@@ -66,7 +66,7 @@ The host's own hierarchy always wins. Within the skill's reach the order is: saf
 
 **D13. No platform adapters.** Every investigated host discovers a standard `SKILL.md` folder, so no Copilot instructions file, Codex agent-metadata file, or Gemini context file was added. An adapter would either duplicate the behavioral rules (a fork to maintain) or merely point at the skill (no gain). Add one only for a verified compatibility problem, and have it reference `SKILL.md` instead of restating rules.
 
-**D14. The contract is host-neutral.** `validate_project.py` rejects assistant product names in `SKILL.md` and `references/`, and rejects README install commands that do not target a directory named `natural-voice`. Platform paths and commands live only in the README and docs.
+**D14. The contract is host-neutral.** `validate_project.py` rejects, in `SKILL.md` and `references/`, rules that are conditional on a host ("when running in X", "X-only") and rules that rely on a host-owned mechanism (a config file, directory, or tool name). Mentioning a product in an example or quotation is allowed. It also rejects README install commands that do not target a directory named `natural-voice`, and install-section commands that use repository-relative paths. Platform paths and commands live only in the README and docs. The checks are regex heuristics: they catch the common shapes, not every possible phrasing.
 
 
 ## Security
