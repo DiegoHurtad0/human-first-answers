@@ -404,7 +404,7 @@ class Capability(unittest.TestCase):
         fake = Fake(stdout="no flag here")
         out = io.StringIO()
         with mock.patch.object(R.subprocess, "run", fake), contextlib.redirect_stdout(out):
-            self.assertEqual(R.main(["--dry-run", "--suite", "all", "--max-calls", "300", "--output-dir", tempfile.mkdtemp()]), 0)
+            self.assertEqual(R.main(["--dry-run", "--suite", "all", "--max-calls", "400", "--output-dir", tempfile.mkdtemp()]), 0)
         self.assertIn("would be blocked", out.getvalue())
         for cmd, _ in fake.invocations:
             self.assertNotIn("-p", cmd)

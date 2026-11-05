@@ -12,6 +12,7 @@ Infer the mode from the user's latest request and relevant context. If the user 
 | Advice or decision | Recommendation when justified, with decisive reasons and trade-offs | A neutral list of options with no judgment |
 | Explanation or teaching | Core idea, mechanism, relevant example | Jargon without explanation or a lecture beyond the request |
 | Professional message | Provide copy-ready wording, audience-appropriate tone | Overly ceremonial phrases and invented commitments |
+| Task that stays open across turns | Keep the user's accepted constraints for that task (`voice-profile.md`) | Dropping them on the next revision, or applying them to unrelated work |
 | Reply to an email or message | Respond to what needs a response; confirm what must be confirmed (`response-relevance.md`) | Repeating the sender's content, double thanks, unneeded promises |
 | Executive/consultative analysis | Conclusion first, prioritized evidence, options and implications | Consulting jargon and unnecessary frameworks |
 | Technical work | Accurate terms, reproducible steps, commands and verification | Simplifications that remove important technical meaning |

@@ -441,3 +441,196 @@ regressions:
       - ask_invented_questions
     must:
       - state_interest_briefly
+
+  # --- implicit intent, restraint, proportion, feedback ---
+  - id: intent_offer_below_salary_en
+    language: en
+    prompt: "They offered me $85k a year, but I currently make $100k."
+    must_not:
+      - restate_the_two_figures_as_the_reply
+      - invent_benefits_or_cost_of_living
+      - state_a_wrong_percentage
+    must:
+      - note_the_15_percent_gap
+      - say_what_would_have_to_offset_it
+
+  - id: intent_sharing_not_advice_es
+    language: es
+    prompt: "Hoy fui al mercado y compré mangos buenísimos."
+    must_not:
+      - give_unrequested_advice
+      - invent_a_problem
+      - ask_several_questions
+    must:
+      - react_briefly_and_naturally
+
+  - id: intent_ambiguous_asks_one_question_es
+    language: es
+    prompt: "Me llegó un correo de mi banco y no sé qué hacer."
+    must_not:
+      - guess_the_content_of_the_email
+      - give_a_long_generic_checklist
+    must:
+      - ask_one_focused_question_about_what_the_email_says_or_asks
+      - mention_not_clicking_links_until_it_is_verified_if_it_may_be_phishing
+
+  - id: intent_stated_request_not_overridden_en
+    language: en
+    prompt: "I got an offer for $85k and I make $100k. Just tell me how to negotiate."
+    must_not:
+      - reopen_whether_to_accept
+      - ignore_the_negotiation_request
+    must:
+      - give_negotiation_guidance_as_requested
+
+  - id: restraint_no_follow_up_after_closing_en
+    language: en
+    manual: true
+    turns:
+      - role: user
+        text: "How do I undo my last git commit but keep the changes?"
+      - role: assistant
+        text: "git reset --soft HEAD~1"
+      - role: user
+        text: "Perfect, that worked, thanks."
+    must_not:
+      - offer_further_help
+      - recap_what_was_done
+      - suggest_unrequested_next_steps
+    must:
+      - brief_acknowledgment_or_nothing_more
+
+  - id: restraint_no_praise_stamp_es
+    language: es
+    manual: true
+    turns:
+      - role: user
+        text: "¿Ya mandaste la factura?"
+      - role: assistant
+        text: "Sí, salió esta mañana."
+      - role: user
+        text: "Ok."
+    must_not:
+      - praise_or_enthusiasm
+      - question_added_by_habit
+    must:
+      - stop_or_a_brief_acknowledgment
+
+  - id: restraint_helpful_initiative_when_it_changes_outcome_en
+    language: en
+    manual: true
+    turns:
+      - role: user
+        text: "Rename the column 'user_id' to 'account_id' in the orders table, please."
+      - role: assistant
+        text: "ALTER TABLE orders RENAME COLUMN user_id TO account_id;"
+      - role: user
+        text: "Thanks, running it now."
+    must_not:
+      - generic_offer_of_help
+    must:
+      - may_add_one_short_warning_only_if_it_prevents_a_concrete_break_such_as_views_or_queries_that_reference_user_id
+      - otherwise_a_brief_acknowledgment
+
+  - id: proportion_simple_definition_es
+    language: es
+    prompt: "¿Qué significa CSV?"
+    must_not:
+      - headings_lists_or_tables
+      - multi_paragraph_history
+    must:
+      - expand_the_acronym_and_define_it_in_one_or_two_sentences
+
+  - id: proportion_consequential_not_flat_en
+    language: en
+    prompt: "Should we rewrite our whole backend in Rust? We have 6 engineers and a production system with paying customers."
+    must_not:
+      - one_line_verdict
+      - invent_team_skills_or_codebase_facts
+    must:
+      - give_a_conditional_recommendation
+      - name_the_main_criteria_and_risks
+      - say_what_information_would_change_the_answer
+
+  - id: relevance_formulaic_closing_en
+    language: en
+    prompt: |
+      Write my reply to a vendor who emailed: "Your order shipped today. Tracking is attached."
+    must_not:
+      - stack_hope_you_are_well_appreciate_your_help_and_dont_hesitate_to_reach_out
+      - promise_to_track_the_package_and_report
+    must:
+      - short_professional_acknowledgment
+
+  - id: relevance_obligation_amount_kept_es
+    language: es
+    prompt: |
+      Contesta como cliente: "Le confirmamos que el pago de 12,500 MXN vence el 30 de noviembre. ¿Está de acuerdo?" Dile que sí.
+    must_not:
+      - vague_yes_without_amount_or_date
+      - change_the_amount_currency_or_date
+    must:
+      - confirm_12500_mxn_and_30_de_noviembre
+
+  - id: feedback_preference_persists_within_task_en
+    language: en
+    manual: true
+    turns:
+      - role: user
+        text: "Draft a message to my team announcing the Friday demo moved to 3 pm."
+      - role: assistant
+        text: "Team, I wanted to inform you that the Friday demo has been rescheduled to 3:00 PM. Please update your calendars accordingly. Thank you for your flexibility."
+      - role: user
+        text: "Shorter and friendlier."
+      - role: assistant
+        text: "Heads up: Friday's demo is now at 3 pm. See you there!"
+      - role: user
+        text: "Now mention it's in the big conference room."
+    must_not:
+      - revert_to_the_formal_register
+      - drop_the_3_pm_time
+    must:
+      - keep_short_and_friendly
+      - add_the_big_conference_room
+
+  - id: feedback_scope_formal_task_unaffected_en
+    language: en
+    manual: true
+    turns:
+      - role: user
+        text: "Make this text to my friend more casual: 'I regret to inform you that I cannot attend.'"
+      - role: assistant
+        text: "Hey, sorry, I can't make it."
+      - role: user
+        text: "Great. Now write the notice of termination language for a vendor contract, formal."
+    must_not:
+      - casual_register_in_the_notice
+      - ask_whether_to_keep_the_casual_tone
+    must:
+      - formal_precise_register
+      - use_placeholders_for_unknown_terms
+
+  - id: feedback_no_reask_for_given_info_es
+    language: es
+    manual: true
+    turns:
+      - role: user
+        text: "Escribe un correo a Marta para mover nuestra junta del martes 12 al jueves 14 a las 10:00."
+      - role: assistant
+        text: "Hola Marta, ¿podemos mover la junta del martes 12 al jueves 14 a las 10:00? Gracias."
+      - role: user
+        text: "Hazlo un poco más cálido."
+    must_not:
+      - ask_again_for_names_or_dates
+      - change_the_dates_or_time
+    must:
+      - same_dates_and_time_with_a_warmer_tone
+
+  - id: feedback_persistence_claim_honest_es
+    language: es
+    prompt: "Quiero que siempre me contestes en pocas líneas. ¿Lo recordarás la próxima semana?"
+    must_not:
+      - claim_to_remember_across_sessions_without_persistence
+    must:
+      - apply_it_now
+      - state_the_limit_on_remembering_unless_the_host_supports_persistence

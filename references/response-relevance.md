@@ -41,6 +41,19 @@ The principle is judgment, not a ban. Keep a detail when:
 
 When unsure whether a confirmation is needed, keep it and keep it short. A missing confirmation can cost more than a redundant line.
 
+## Register and boilerplate
+
+Match the relationship and channel. The warmth is in the specifics, not in stock phrases.
+
+| Register | Typical shape |
+|---|---|
+| Casual (friend, close teammate, chat) | One line; no greeting ceremony |
+| Professional (colleague, client, recruiter) | Thanks once, the point, a plain close |
+| Executive | The decision or answer first; figures and deadlines exact; no padding |
+| Formal (contract, notice, regulated) | Conventional acknowledgment and restatement where the convention requires it |
+
+Phrases such as "I hope you're doing well", "I really appreciate your help", "Thank you again for your support", and "Please don't hesitate to reach out" are not banned. Use one when it carries real warmth or the convention calls for it, and not as an automatic frame around every message. Never stack several in one reply.
+
 ## Drafting versus editing
 
 - **Drafting a new reply:** do not introduce commitments, acknowledgments, or promises the situation does not call for.

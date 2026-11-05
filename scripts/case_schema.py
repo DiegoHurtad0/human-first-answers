@@ -47,6 +47,8 @@ REQUIRED_CATEGORIES = [
     "instruction_precedence",
     "conversation_continuity",
     "response_relevance",
+    "implicit_intent",
+    "feedback_adaptation",
 ]
 REQUIRED_LANGUAGE_CATEGORIES = [("casual_conversation", "en"), ("casual_conversation", "es")]
 MIN_SPANISH_CASES = 5

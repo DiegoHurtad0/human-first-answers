@@ -11,8 +11,8 @@ Each file has one responsibility. Before adding a rule, find its owner; if two f
 | `SKILL.md` | The behavior contract, precedence order, untrusted-content rule, workflow, mode list. Loaded in full on activation, so it stays short. |
 | `references/instruction-precedence.md` | Tie-breakers and worked conflict cases. |
 | `references/natural-conversation.md` | Conversational flow, warmth, person (I/you), emotional conversations, multilingual notes. |
-| `references/conversation-continuity.md` | Responding to short and conversational turns without echoing: message functions, acknowledgment, follow-up discipline, conversation state, when repetition is correct. Owns the Spanish and English short-reply examples. |
-| `references/response-relevance.md` | What a drafted reply to someone else's message contains: sorting the incoming message into what needs a response, what only needs understanding, what must be confirmed, and what adds nothing if repeated. Owns the rules on unneeded commitments, redundant acknowledgments, and repeated thanks. |
+| `references/conversation-continuity.md` | Responding to short and conversational turns without echoing: message functions, acknowledgment, follow-up discipline, conversation state, when repetition is correct. Owns reading implicit intent, knowing when a reply is complete, and the Spanish and English short-reply examples. |
+| `references/response-relevance.md` | What a drafted reply to someone else's message contains: sorting the incoming message into what needs a response, what only needs understanding, what must be confirmed, and what adds nothing if repeated. Owns the rules on unneeded commitments, redundant acknowledgments, repeated thanks, and register-appropriate boilerplate. |
 | `references/clear-communication.md` | Answer-first structure, depth, format choice, clarification, endings. |
 | `references/consultative-thinking.md` | Problem definition, recommendation pattern, evidence discipline, frameworks and when each applies. |
 | `references/pyramid-principle-scqa.md` | The two communication frameworks, with their limits. |
@@ -59,6 +59,8 @@ The host's own hierarchy always wins. Within the skill's reach the order is: saf
 **D10. Scripted multi-turn cases are manual.** A case may carry `turns` (a transcript ending on a user turn) instead of `prompt`. The runner sends one prompt and cannot replay scripted assistant turns, so `turns` requires `manual: true` and the schema enforces it. `run_evaluation.py --show-manual` prints these cases for a reviewer who replays them in a real conversation. Flattening a transcript into one prompt is not equivalent and is not done.
 
 **D11. Information economy is separate from echo avoidance.** Echoing returns the user's words in live conversation; carryover moves the sender's content into a reply drafted for the user to send. Different input, different failure, different exceptions, so `response-relevance.md` owns it and `conversation-continuity.md` points to it. The principle is judgment, not a ban: dates, amounts, obligations, and next steps are confirmed when the exchange needs it. Drafting a new reply avoids unneeded commitments; editing the user's own draft preserves theirs.
+
+**D12. No new reference file for intent, restraint, proportion, or feedback.** Implicit intent and restraint are turn-level judgments, so they extend `conversation-continuity.md` (message function, reply completeness). Proportion extends `clear-communication.md`. Task-scoped corrections extend `voice-profile.md`, which already owns the one-correction-is-not-a-personality rule. Register and boilerplate extend `response-relevance.md`. `SKILL.md` gained clauses in existing items, not new items.
 
 **D8. Dry runs never need a model.** `run_evaluation.py --dry-run` prints the plan and the blinding without touching the network and reports whether a live run would be blocked.
 

@@ -776,3 +776,229 @@ cases:
       - deletes_the_monday_commitment_silently
       - changes_the_day_or_the_commitment
       - rewrites_the_whole_message
+
+  # --- implicit intent, restraint, proportion, feedback ---
+  - id: intent_offer_below_salary_es
+    language: es
+    category: implicit_intent
+    intent: implicit_request_for_assessment
+    prompt: "Me ofrecieron 70k al mes, pero actualmente gano 100k."
+    expected:
+      - computes_that_the_offer_is_30_percent_lower
+      - judges_from_the_given_facts_and_says_what_would_have_to_compensate
+      - does_not_claim_the_user_should_decline_with_certainty
+    failure_modes:
+      - restates_the_two_figures_as_the_whole_reply
+      - invents_benefits_cost_of_living_or_market_rates
+      - wrong_percentage
+      - long_framework_report
+      - several_clarifying_questions
+
+  - id: intent_sharing_news_not_advice_en
+    language: en
+    category: implicit_intent
+    intent: information_sharing_not_a_request
+    prompt: "Just got back from my sister's wedding. It was a really good weekend."
+    expected:
+      - react_to_the_news_briefly
+      - at_most_one_question_that_comes_from_the_message
+    failure_modes:
+      - gives_unrequested_advice
+      - invents_a_problem_or_concern
+      - restates_that_the_user_attended_the_wedding
+      - several_questions
+
+  - id: intent_two_offers_one_focused_question_en
+    language: en
+    category: implicit_intent
+    intent: materially_different_readings
+    prompt: "I got two offers and I have to answer by Friday."
+    expected:
+      - asks_one_focused_question_such_as_what_the_two_offers_are_or_what_matters_most
+      - does_not_pick_an_offer_or_invent_details
+      - brief
+    failure_modes:
+      - recommends_one_offer_without_information
+      - long_menu_of_questions
+      - generic_decision_framework_lecture
+      - invents_the_offer_terms
+
+  - id: intent_conditional_recommendation_es
+    language: es
+    category: strategic_decision
+    intent: consequential_decision_proportion
+    prompt: "¿Debería renunciar a mi trabajo estable para emprender? Tengo ahorros para unos 8 meses."
+    expected:
+      - gives_a_conditional_view_using_the_8_month_runway
+      - names_the_decisive_criteria_and_the_main_risk
+      - says_what_missing_information_would_change_the_answer
+    failure_modes:
+      - flat_yes_or_no_without_basis
+      - invents_the_users_income_or_business
+      - generic_motivational_text
+      - drops_the_risk_for_brevity
+
+  - id: proportion_api_meaning_en
+    language: en
+    category: factual_simple
+    intent: informational_short_answer
+    prompt: "What does API mean?"
+    expected:
+      - expands_the_acronym_and_gives_a_one_or_two_sentence_definition
+      - no_headings_lists_or_table
+    failure_modes:
+      - multi_section_report
+      - framework_or_structure_for_a_simple_question
+      - generic_closing_offer
+
+  - id: proportion_warehouse_migration_en
+    language: en
+    category: strategic_decision
+    intent: consequential_decision_proportion
+    prompt: "Should our company migrate from Snowflake to BigQuery?"
+    expected:
+      - states_that_the_answer_depends_and_names_the_deciding_criteria
+      - covers_trade_offs_and_assumptions
+      - gives_a_conditional_recommendation_not_a_flat_verdict
+    failure_modes:
+      - one_line_verdict
+      - invents_company_facts_or_pricing
+      - ignores_migration_cost_and_risk
+      - pure_feature_comparison_with_no_recommendation
+
+  - id: relevance_slack_reply_en
+    language: en
+    category: response_relevance
+    intent: casual_workplace_reply
+    prompt: |
+      Write my Slack reply. A teammate wrote: "Deploy is done. The rollback steps are in the runbook if anything looks off."
+    expected:
+      - one_short_line_such_as_thanks_or_got_it
+      - no_promise_to_monitor_or_report
+    failure_modes:
+      - restates_that_the_deploy_is_done
+      - promises_to_watch_the_dashboards
+      - formal_email_style
+      - repeated_thanks
+
+  - id: relevance_executive_approval_es
+    language: es
+    category: response_relevance
+    intent: executive_confirmation_keeps_details
+    prompt: |
+      Redacta mi respuesta como director. La gerente escribió: "Necesitamos tu aprobación del presupuesto de 45,000 USD antes del jueves." Dile que lo apruebo.
+    expected:
+      - confirms_approval_and_keeps_the_amount_45000_usd
+      - brief_and_direct_executive_register
+      - no_invented_conditions_or_deadlines
+    failure_modes:
+      - vague_approval_without_the_amount
+      - changes_the_amount_or_currency
+      - invents_conditions_or_follow_up
+      - ceremonial_opening
+
+  - id: feedback_no_cross_session_memory_en
+    language: en
+    category: feedback_adaptation
+    intent: persistence_honesty
+    prompt: "From now on keep your emails to me short. Will you still do that next week?"
+    expected:
+      - confirms_it_will_apply_in_this_conversation
+      - states_honestly_that_it_cannot_promise_memory_across_sessions_unless_the_host_has_persistence
+      - brief
+    failure_modes:
+      - claims_it_will_remember_next_week
+      - refuses_to_apply_the_preference_now
+      - long_explanation_of_memory_architecture
+
+  - id: feedback_shorter_less_formal_persists_en
+    language: en
+    category: feedback_adaptation
+    intent: constraints_persist_across_revisions
+    manual: true
+    turns:
+      - role: user
+        text: "Write an email to my landlord asking to move the inspection from Tuesday to Thursday."
+      - role: assistant
+        text: "Dear Mr. Alvarez, I hope this message finds you well. I am writing to respectfully request that the scheduled inspection be moved from Tuesday to Thursday. I would be grateful for your confirmation at your earliest convenience. Kind regards, Diego"
+      - role: user
+        text: "Make it shorter and less formal."
+      - role: assistant
+        text: "Hi Mr. Alvarez, could we move the inspection from Tuesday to Thursday? Thanks, Diego"
+      - role: user
+        text: "Good. Now add that I can be home any time after 2 pm."
+    expected:
+      - keeps_the_short_and_informal_register
+      - adds_the_after_2_pm_availability_exactly
+      - keeps_tuesday_to_thursday
+      - does_not_ask_again_for_the_landlord_name_or_the_dates
+    failure_modes:
+      - reverts_to_the_formal_long_version
+      - drops_or_changes_the_2_pm_detail
+      - re_asks_for_information_already_given
+      - rewrites_unrelated_parts
+
+  - id: feedback_casual_does_not_transfer_to_legal_es
+    language: es
+    category: feedback_adaptation
+    intent: preference_scoped_to_task
+    manual: true
+    turns:
+      - role: user
+        text: "Escríbele a mi amiga que no puedo ir a su cumpleaños."
+      - role: assistant
+        text: "Mi estimada amiga, lamento informarte que no podré asistir a tu cumpleaños."
+      - role: user
+        text: "Más relajado, así no hablo yo."
+      - role: assistant
+        text: "Oye, no voy a poder ir a tu cumple. Perdón, me caga perdérmelo."
+      - role: user
+        text: "Perfecto. Ahora redacta una cláusula de confidencialidad de dos párrafos para un contrato de servicios."
+    expected:
+      - formal_precise_legal_register_for_the_clause
+      - does_not_import_slang_or_the_relaxed_tone
+      - delivers_the_requested_two_paragraph_clause
+    failure_modes:
+      - casual_or_slang_register_in_the_clause
+      - asks_whether_to_keep_the_relaxed_tone
+      - invents_party_names_or_amounts_without_placeholders
+
+  - id: restraint_thanks_done_es
+    language: es
+    category: conversation_continuity
+    intent: closing_signal
+    manual: true
+    turns:
+      - role: user
+        text: "¿Cómo cambio el nombre de una rama en git?"
+      - role: assistant
+        text: "git branch -m nombre-nuevo (si estás en la rama), o git branch -m viejo nuevo."
+      - role: user
+        text: "Gracias, ya quedó."
+    expected:
+      - a_brief_acknowledgment_such_as_perfecto
+      - no_offer_of_further_help_no_recap_no_next_step
+    failure_modes:
+      - hay_algo_mas_en_lo_que_pueda_ayudarte
+      - forced_enthusiasm
+      - suggests_pushing_or_other_unrequested_next_steps
+
+  - id: restraint_unresolved_continues_en
+    language: en
+    category: conversation_continuity
+    intent: thanks_plus_open_problem
+    manual: true
+    turns:
+      - role: user
+        text: "My script throws KeyError: 'name' on line 12."
+      - role: assistant
+        text: "The dictionary has no 'name' key at that point. Use row.get('name') or check how the row is built."
+      - role: user
+        text: "Thanks, that fixed it, but now line 20 says TypeError: unsupported operand type(s) for +: 'int' and 'str'."
+    expected:
+      - briefly_acknowledges_and_moves_to_the_new_error
+      - explains_the_int_plus_str_mismatch_and_a_fix
+    failure_modes:
+      - treats_the_message_as_a_closing_thanks_and_stops
+      - long_celebration_of_the_first_fix
+      - asks_for_information_already_visible

@@ -224,6 +224,60 @@ class ResponseRelevance(unittest.TestCase):
             self.assertIn(cid, rel)
 
 
+class JudgmentAndAdaptation(unittest.TestCase):
+    CONT = REFS["conversation-continuity.md"]
+
+    def test_implicit_intent_has_limits_against_mind_reading(self):
+        for fragment in ("Reading implicit intent", "Do not manufacture a concern", "Ask one focused question",
+                         "not automatically a request for advice", "Use only the facts given"):
+            self.assertIn(fragment, self.CONT, fragment)
+
+    def test_completeness_and_initiative(self):
+        for fragment in ("Knowing when the reply is complete", "Keep going when the objective is unresolved",
+                         "Initiative adds value; it does not add turns"):
+            self.assertIn(fragment, self.CONT, fragment)
+
+    def test_boilerplate_is_context_dependent_not_banned(self):
+        text = REFS["response-relevance.md"]
+        self.assertIn("are not banned", text)
+        self.assertIn("Casual", text)
+        self.assertIn("Executive", text)
+        self.assertIn("Formal", text)
+
+    def test_proportion_covers_task_types_and_keeps_safety(self):
+        text = REFS["clear-communication.md"]
+        for fragment in ("Proportion to the task", "Informational", "Consequential decision", "Emotional conversation",
+                         "Operational task", "Do not cut a safety limit"):
+            self.assertIn(fragment, text, fragment)
+
+    def test_corrections_are_task_scoped_and_memory_claims_honest(self):
+        text = REFS["voice-profile.md"]
+        for fragment in ("Corrections within a task", "Scope it to the task", "Never claim to remember across sessions"):
+            self.assertIn(fragment, text, fragment)
+        self.assertIn("voice-profile.md", self.CONT)
+
+    def test_skill_stays_small_and_adds_no_new_reference_for_this(self):
+        self.assertLess(len(SKILL.splitlines()), 160)
+        self.assertEqual(len([n for n in REFS if n.endswith(".md")]), 13)
+
+    def test_new_cases_cover_both_languages_and_keep_multi_turn_manual(self):
+        import case_schema
+        cases = case_schema.load_all_cases(ROOT / "tests")
+        groups = {"intent_": 7, "feedback_": 6, "restraint_": 5, "proportion_": 4}
+        for prefix, minimum in groups.items():
+            group = {k: v for k, v in cases.items() if k.startswith(prefix)}
+            self.assertGreaterEqual(len(group), minimum, prefix)
+            self.assertTrue({"en", "es"} <= {c["language"] for c in group.values()} or prefix == "restraint_", prefix)
+            for cid, case in group.items():
+                self.assertEqual(bool(case["turns"]), bool(case["manual"]), cid)
+        # A case where asking is right, and a case where a stated request must not be overridden.
+        self.assertIn("intent_two_offers_one_focused_question_en", cases)
+        self.assertIn("intent_stated_request_not_overridden_en", cases)
+        # Brevity cannot win by dropping details.
+        self.assertIn("relevance_executive_approval_es", cases)
+        self.assertIn("relevance_obligation_amount_kept_es", cases)
+
+
 class CiWorkflow(unittest.TestCase):
     """The workflow is read as data; these tests do not prove GitHub runs it successfully."""
 
