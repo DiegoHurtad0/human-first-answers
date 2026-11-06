@@ -34,4 +34,4 @@ jobs:
       - name: Unit tests
         run: python -m pytest -q
       - name: Evaluation plan (dry run, no model calls)
-        run: python scripts/run_evaluation.py --dry-run --suite all --max-calls 200
+        run: python scripts/run_evaluation.py --dry-run --suite all --max-calls 400

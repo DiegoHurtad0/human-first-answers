@@ -357,3 +357,72 @@ class Cli(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Portability(Fixture):
+    def reference_errors(self, text):
+        self.write("references/one.md", "# One\n" + text + "\n")
+        return [e for e in self.validate().errors if "host-" in e]
+
+    def test_host_conditional_rules_are_rejected(self):
+        for text in ("In Claude Code, skip the headings.", "When running in Copilot, use bullets.",
+                     "If the assistant is Codex, answer in one line.", "This is a Gemini CLI-only rule.",
+                     "- On Windsurf: keep it short."):
+            self.assertTrue(self.reference_errors(text), text)
+
+    def test_host_owned_mechanisms_are_rejected(self):
+        for text in ("Read CLAUDE.md first.", "Save it under .claude/skills.", "Call activate_skill.",
+                     "Edit copilot-instructions.md.", "Set it in openai.yaml."):
+            self.assertTrue(self.reference_errors(text), text)
+
+    def test_legitimate_mentions_are_allowed(self):
+        for text in ('The user says "Claude wrote this" and wants it rewritten.',
+                     "Write a cover letter for an OpenAI recruiter.", "Openers like ChatGPT-style praise are a pattern.",
+                     "Gemini is a constellation.", "A reviewer named Codex as an example of verbose output.",
+                     "Cite Anthropic's published guidance if the user asks for sources."):
+            self.assertEqual(self.reference_errors(text), [], text)
+
+    def test_host_names_are_allowed_outside_the_contract(self):
+        self.write("docs/notes.md", "In Claude Code, run /skills. Works in Copilot and Codex.\n")
+        self.assertEqual(self.validate().errors, [])
+
+    def test_install_section_commands_must_not_use_repository_relative_paths(self):
+        bad = "## Supported AI Assistants\n\n```bash\npython3 scripts/validate_project.py --root x --strict-install\n```\n\n## Next\n"
+        self.write("README.md", bad + "```bash\ngit clone u ~/.agents/skills/natural-voice\n```\n")
+        report = V.Report()
+        V.check_install_docs(self.root, report)
+        self.assert_error(report, "relative to the repository")
+        good = "## Supported AI Assistants\n\n```bash\nSKILL=~/x/natural-voice\npython3 -m pip install -r \"$SKILL/requirements-dev.txt\"\npython3 \"$SKILL/scripts/validate_project.py\" --root \"$SKILL\"\ngit clone u ~/.agents/skills/natural-voice\n```\n\n## Next\n"
+        self.write("README.md", good)
+        report = V.Report()
+        V.check_install_docs(self.root, report)
+        self.assertEqual(report.errors, [])
+
+    def test_install_commands_must_target_the_skill_name(self):
+        self.write("README.md", "```bash\ngit clone https://example.com/r.git ~/.agents/skills/natural-voice\n```\n")
+        report = V.Report()
+        V.check_install_docs(self.root, report)
+        self.assertEqual(report.errors, [])
+        self.write("README.md", "```bash\ngit clone https://example.com/r.git ~/.agents/skills/human-first-answers\n```\n")
+        report = V.Report()
+        V.check_install_docs(self.root, report)
+        self.assert_error(report, "does not target a directory named 'natural-voice'")
+
+    def test_symlink_commands_are_checked_and_missing_commands_are_reported(self):
+        self.write("README.md", "```bash\nln -s ~/x ~/.claude/skills/wrong\n```\n")
+        report = V.Report()
+        V.check_install_docs(self.root, report)
+        self.assert_error(report, "natural-voice")
+        self.write("README.md", "no commands here\n")
+        report = V.Report()
+        V.check_install_docs(self.root, report)
+        self.assert_error(report, "no install commands")
+
+    def test_readme_documents_each_investigated_assistant_and_its_paths(self):
+        text = (Path(V.__file__).resolve().parent.parent / "README.md").read_text(encoding="utf-8")
+        self.assertIn("## Supported AI Assistants", text)
+        for fragment in ("GitHub Copilot", "Claude Code", "OpenAI Codex", "Gemini CLI", ".agents/skills", ".claude/skills",
+                         ".github/skills", ".gemini/skills", "~/.copilot/skills", "Documented, untested"):
+            self.assertIn(fragment, text, fragment)
+        self.assertIn("not sharing a URL", text)
+        self.assertNotIn("copilot-instructions", text.split("### Installing")[0])

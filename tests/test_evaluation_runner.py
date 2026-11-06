@@ -60,7 +60,8 @@ class CaseLoading(unittest.TestCase):
         raw = case_schema.read_yaml(ROOT / "tests" / "evaluation-cases.yaml")
         for case in raw["cases"]:
             loaded = CASES[case["id"]]
-            self.assertEqual(loaded["prompt"], case["prompt"])
+            self.assertEqual(loaded["prompt"], case.get("prompt"))
+            self.assertEqual(loaded["turns"], case.get("turns"))
             self.assertEqual(loaded["expected"], case["expected"])
             self.assertEqual(loaded["failure_modes"], case["failure_modes"])
 
@@ -82,6 +83,28 @@ class CaseLoading(unittest.TestCase):
     def test_explicit_cases_override_the_suite(self):
         args = type("A", (), {"cases": ["strict_format"], "suite": "all"})()
         self.assertEqual(R.select_cases(args, CASES), ["strict_format"])
+
+    def test_scripted_multi_turn_cases_are_manual_and_have_no_single_prompt(self):
+        scripted = [c for c in CASES.values() if c["turns"]]
+        self.assertGreaterEqual(len(scripted), 10)
+        for case in scripted:
+            self.assertTrue(case["manual"], case["id"])
+            self.assertIsNone(case["prompt"], case["id"])
+
+    def test_show_manual_prints_transcripts_and_makes_no_calls(self):
+        out = io.StringIO()
+        fake = Fake(stdout="irrelevant")
+        with mock.patch.object(R.subprocess, "run", fake), contextlib.redirect_stdout(out):
+            self.assertEqual(R.main(["--show-manual"]), 0)
+        text = out.getvalue()
+        self.assertIn("Assistant: ¿Te bañaste hoy?\nUser: Sí.", text)
+        self.assertIn("Failure modes:", text)
+        self.assertIn("never runs them", text)
+        self.assertEqual(fake.invocations, [])
+
+    def test_explicitly_requesting_a_scripted_case_is_refused(self):
+        with contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(R.main(["--dry-run", "--cases", "echo_spanish_yes_no_answer"]), 2)
 
     def test_pilot_cases_are_not_manual(self):
         self.assertFalse([c for c in R.PILOT_CASES if CASES[c]["manual"]])
@@ -381,7 +404,7 @@ class Capability(unittest.TestCase):
         fake = Fake(stdout="no flag here")
         out = io.StringIO()
         with mock.patch.object(R.subprocess, "run", fake), contextlib.redirect_stdout(out):
-            self.assertEqual(R.main(["--dry-run", "--suite", "all", "--max-calls", "200", "--output-dir", tempfile.mkdtemp()]), 0)
+            self.assertEqual(R.main(["--dry-run", "--suite", "all", "--max-calls", "400", "--output-dir", tempfile.mkdtemp()]), 0)
         self.assertIn("would be blocked", out.getvalue())
         for cmd, _ in fake.invocations:
             self.assertNotIn("-p", cmd)

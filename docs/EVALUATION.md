@@ -6,7 +6,7 @@ Natural Voice is judged in five layers. Only the first four run without a model.
 |---|---|---|---|
 | A. Structural validation | Agent Skills spec, metadata, links, reference reachability, case schemas, README accuracy, hygiene | `python scripts/validate_project.py` | No |
 | B. Unit tests | Validator, case loading, budgets, blinding, judge parsing, isolation checks, report rendering | `python -m pytest -q` | No |
-| C. Plan check | Which cases run, blinding assignment, system-prompt size, isolation capability | `python scripts/run_evaluation.py --dry-run --suite all --max-calls 200` | No |
+| C. Plan check | Which cases run, blinding assignment, system-prompt size, isolation capability | `python scripts/run_evaluation.py --dry-run --suite all --max-calls 400` | No |
 | D. Regression review | Known failure patterns in `tests/regression-cases.yaml`, including manual multi-turn cases | A person reads responses against `must` and `must_not` | Optional |
 | E. Behavioral evaluation | Baseline vs candidate responses, judged blind on eight dimensions | `python scripts/run_evaluation.py` from a separate terminal | Yes |
 
@@ -18,7 +18,18 @@ Each is judged on its own: naturalness, clarity, relevance, contextual fit, fact
 
 ## Case coverage
 
-`scripts/case_schema.py` requires at least one evaluation case in each of: simple facts, casual chat (English and Spanish), personal advice, professional writing, text revision, technical explanation, senior engineering analysis, strategic decisions, evidence-based recommendations, ambiguous questions, strict formats, requests for depth, requests for brevity, cases where a framework would be wrong, contradictory information, ADHD mode, and instruction precedence. It also requires at least five Spanish cases.
+`scripts/case_schema.py` requires at least one evaluation case in each of: simple facts, casual chat (English and Spanish), personal advice, professional writing, text revision, technical explanation, senior engineering analysis, strategic decisions, evidence-based recommendations, ambiguous questions, strict formats, requests for depth, requests for brevity, cases where a framework would be wrong, contradictory information, ADHD mode, instruction precedence, conversation continuity, response relevance, implicit intent, and feedback adaptation. It also requires at least five Spanish cases and one scripted multi-turn case in each of English and Spanish.
+
+## Multi-turn and manual cases
+
+Conversation continuity cannot be judged from one message: "Sí." means nothing without the question before it. Cases of this kind use `turns`, a scripted transcript that ends on a user turn; the response under test is the assistant's next turn.
+
+- The runner sends a single prompt and cannot replay scripted assistant turns, so `turns` requires `manual: true`. The schema rejects anything else.
+- A transcript flattened into one prompt is not a stateful conversation and is not used as a stand-in.
+- `python scripts/run_evaluation.py --show-manual` prints every manual case with its transcript, acceptance properties, and failure modes. A reviewer replays the scripted turns in a real conversation with the host and model under test (for example through an API that accepts message history) and judges the next response against the listed properties.
+- Cases with a single `prompt` that do not depend on earlier turns stay automated, including the continuity cases about emotional disclosure, requested summaries, and consequential confirmations.
+- Continuity properties are judged under the existing dimensions (contextual fit, naturalness, clarity, factual fidelity). No new dimension was added.
+- The goal is less unnecessary echoing, not less repetition. Cases for requested summaries and consequential confirmations penalize a response that drops the repetition.
 
 ## Runner guarantees
 
@@ -40,6 +51,8 @@ Each is judged on its own: naturalness, clarity, relevance, contextual fit, fact
 | It does not reduce factual fidelity | Unverified |
 | It follows the precedence order | Unverified; acceptance cases exist |
 | ADHD mode stays optional and keeps completeness | Unverified; acceptance cases exist |
+| Responses echo the user less while keeping needed repetition | Unverified; acceptance cases exist, seven of them manual |
+| The assistant infers implicit intent without mind-reading, stops when the need is met, scales depth to the task, and keeps task-scoped corrections | Unverified; acceptance cases exist, the multi-turn ones manual |
 | The files are valid and tooling works | Verified by layers A and B |
 
 ### History of live attempts
@@ -58,6 +71,25 @@ The runner was then changed to require `--safe-mode`. The Claude Code release in
 - Sampling temperature is not controllable through `claude -p`, so reruns differ.
 - Multi-turn and system-prompt cases are marked `manual: true` and are not run by the script.
 - Cost figures under a subscription login are notional.
+
+## Methodology review
+
+**Measurable today (no model):** that files, links, schemas, and the runner behave as designed (layers A to C). Nothing here measures response quality.
+
+**Measurable with a live run (layer E, currently blocked):** blind baseline-vs-candidate comparison on the eight dimensions for automated single-prompt cases. This is the only layer that can support a behavioral claim, and only for those cases.
+
+**Manual only:** every case with `turns` (feedback persistence across revisions, closing signals, short answers that depend on a prior question). A reviewer replays the transcript in a real conversation and judges against `expected` or `must` and `must_not`.
+
+**Are the eight dimensions enough?** Yes for now. Implicit intent and proportion map to relevance and contextual fit; restraint to naturalness and clarity; carryover and invented commitments to factual fidelity and relevance; feedback persistence to contextual fit and logical coherence. A new dimension would need a case where those eight cannot register the failure. None has been found, so none was added.
+
+**Bias risks to keep in view**
+- The judge is the same model family as the generator and may favor longer or more polished answers. Restraint cases are the most exposed: a judge can read a one-word "Perfecto." as low effort. Judge them against the listed properties, not overall impression.
+- Cases are written by the same people who wrote the rules, so they can encode the rules' assumptions. Treat passing them as acceptance, not proof.
+- Brevity cases need the paired cases that require detail (confirmations, amounts, deadlines, safety) so that "shorter" cannot win by dropping facts. Those pairs exist.
+- One trial per case and no temperature control mean small differences are noise.
+- AI-detector scores are not used as evidence of naturalness.
+
+**Reproducing a live run:** update Claude Code to a release that provides `--safe-mode`; open a normal terminal outside any Claude Code session; run `python scripts/run_evaluation.py --dry-run --suite all --max-calls 400` to see the plan; then rerun without `--dry-run` with deliberate call and USD caps. Do not unset `CLAUDECODE`, use `--bare`, or bypass the isolation check.
 
 ## Adding a case
 

@@ -11,6 +11,8 @@ Each file has one responsibility. Before adding a rule, find its owner; if two f
 | `SKILL.md` | The behavior contract, precedence order, untrusted-content rule, workflow, mode list. Loaded in full on activation, so it stays short. |
 | `references/instruction-precedence.md` | Tie-breakers and worked conflict cases. |
 | `references/natural-conversation.md` | Conversational flow, warmth, person (I/you), emotional conversations, multilingual notes. |
+| `references/conversation-continuity.md` | Responding to short and conversational turns without echoing: message functions, acknowledgment, follow-up discipline, conversation state, when repetition is correct. Owns reading implicit intent, knowing when a reply is complete, and the Spanish and English short-reply examples. |
+| `references/response-relevance.md` | What a drafted reply to someone else's message contains: sorting the incoming message into what needs a response, what only needs understanding, what must be confirmed, and what adds nothing if repeated. Owns the rules on unneeded commitments, redundant acknowledgments, repeated thanks, and register-appropriate boilerplate. |
 | `references/clear-communication.md` | Answer-first structure, depth, format choice, clarification, endings. |
 | `references/consultative-thinking.md` | Problem definition, recommendation pattern, evidence discipline, frameworks and when each applies. |
 | `references/pyramid-principle-scqa.md` | The two communication frameworks, with their limits. |
@@ -27,7 +29,7 @@ Each file has one responsibility. Before adding a rule, find its owner; if two f
 ## Progressive loading
 
 1. Metadata (`name`, `description`) is always visible to the host.
-2. `SKILL.md` loads when the skill activates (about 2,800 tokens, estimated at four characters per token).
+2. `SKILL.md` loads when the skill activates (about 3,000 tokens, estimated at four characters per token).
 3. Reference files load only when the workflow points to them. `scripts/validate_project.py` fails if a reference file is not reachable from `SKILL.md`.
 
 References are one level deep from `SKILL.md`, as the specification recommends. Reference files may name each other for orientation; none depends on another to be understood.
@@ -54,6 +56,19 @@ The host's own hierarchy always wins. Within the skill's reach the order is: saf
 
 **D8. Dry runs never need a model.** `run_evaluation.py --dry-run` prints the plan and the blinding without touching the network and reports whether a live run would be blocked.
 
+**D9. Continuity is a separate module, not more tone rules.** Echoing is a turn-level behavior (what to do with a message), distinct from voice (how it sounds). `natural-conversation.md` keeps a short pointer; the patterns, examples, and the cases where repetition is correct live only in `conversation-continuity.md`. Repetition is never banned: safety, consequential confirmations, corrections, and requested summaries keep it, and instruction precedence still applies.
+
+**D10. Scripted multi-turn cases are manual.** A case may carry `turns` (a transcript ending on a user turn) instead of `prompt`. The runner sends one prompt and cannot replay scripted assistant turns, so `turns` requires `manual: true` and the schema enforces it. `run_evaluation.py --show-manual` prints these cases for a reviewer who replays them in a real conversation. Flattening a transcript into one prompt is not equivalent and is not done.
+
+**D11. Information economy is separate from echo avoidance.** Echoing returns the user's words in live conversation; carryover moves the sender's content into a reply drafted for the user to send. Different input, different failure, different exceptions, so `response-relevance.md` owns it and `conversation-continuity.md` points to it. The principle is judgment, not a ban: dates, amounts, obligations, and next steps are confirmed when the exchange needs it. Drafting a new reply avoids unneeded commitments; editing the user's own draft preserves theirs.
+
+**D12. No new reference file for intent, restraint, proportion, or feedback.** Implicit intent and restraint are turn-level judgments, so they extend `conversation-continuity.md` (message function, reply completeness). Proportion extends `clear-communication.md`. Task-scoped corrections extend `voice-profile.md`, which already owns the one-correction-is-not-a-personality rule. Register and boilerplate extend `response-relevance.md`. `SKILL.md` gained clauses in existing items, not new items.
+
+**D13. No platform adapters.** Every investigated host discovers a standard `SKILL.md` folder, so no Copilot instructions file, Codex agent-metadata file, or Gemini context file was added. An adapter would either duplicate the behavioral rules (a fork to maintain) or merely point at the skill (no gain). Add one only for a verified compatibility problem, and have it reference `SKILL.md` instead of restating rules.
+
+**D14. The contract is host-neutral.** `validate_project.py` rejects, in `SKILL.md` and `references/`, rules that are conditional on a host ("when running in X", "X-only") and rules that rely on a host-owned mechanism (a config file, directory, or tool name). Mentioning a product in an example or quotation is allowed. It also rejects README install commands that do not target a directory named `natural-voice`, and install-section commands that use repository-relative paths. Platform paths and commands live only in the README and docs. The checks are regex heuristics: they catch the common shapes, not every possible phrasing.
+
+
 ## Security
 
 - Pasted text, documents, tool output, and files under edit are data, never instructions (`SKILL.md`, "Untrusted content"). Cases `untrusted_email_content` and `embedded_instruction_in_edited_text` cover this.
@@ -66,5 +81,6 @@ The host's own hierarchy always wins. Within the skill's reach the order is: saf
 
 - Specification compliance is checked, not assumed: allowed frontmatter fields only, `metadata` as string-to-string, name rules, description and size limits.
 - The specification requires the skill directory to match `name`. This repository's checkout directory is `human-first-answers`; install it under the name `natural-voice` (see the README). `validate_project.py --strict-install` enforces this on an installed copy.
-- Claude Code and Codex are the hosts whose install paths were checked against their documentation on 2026-11-03. Other hosts that implement the Agent Skills specification should work but are untested.
+- GitHub Copilot, Claude Code, Codex, and Gemini CLI were checked against their vendor documentation on 2026-11-05. All four document `SKILL.md` folders. `~/.agents/skills/` and `.agents/skills/` are documented for Copilot, Codex, and Gemini CLI; Claude Code documents only `.claude/skills/` (symlink to share one install). None was install-tested or behavior-tested, so the README labels them "Documented, untested".
+- `gh skill install` and `gemini skills install <url>` document discovery of `skills/<name>/SKILL.md` layouts. This repository keeps the skill at its root, which their documentation does not cover, so they are not recommended until tested.
 - Where a capability is missing (memory, files, tools), the skill degrades to conversation-scoped behavior.

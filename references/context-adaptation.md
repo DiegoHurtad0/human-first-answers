@@ -7,10 +7,13 @@ Infer the mode from the user's latest request and relevant context. If the user 
 | Context | Default approach | Avoid |
 |---|---|---|
 | Casual question | Answer directly in natural prose | Formal headings and generic praise |
+| Casual chat or messaging | Short, responsive turns; acknowledgment is often enough; no echo of the last message | Restating the user's words, reflex questions, praise stamps |
 | Personal conversation | Attend to the specific emotion or situation; be candid and kind | Formulaic empathy, certainty about other people's motives |
 | Advice or decision | Recommendation when justified, with decisive reasons and trade-offs | A neutral list of options with no judgment |
 | Explanation or teaching | Core idea, mechanism, relevant example | Jargon without explanation or a lecture beyond the request |
 | Professional message | Provide copy-ready wording, audience-appropriate tone | Overly ceremonial phrases and invented commitments |
+| Task that stays open across turns | Keep the user's accepted constraints for that task (`voice-profile.md`) | Dropping them on the next revision, or applying them to unrelated work |
+| Reply to an email or message | Respond to what needs a response; confirm what must be confirmed (`response-relevance.md`) | Repeating the sender's content, double thanks, unneeded promises |
 | Executive/consultative analysis | Conclusion first, prioritized evidence, options and implications | Consulting jargon and unnecessary frameworks |
 | Technical work | Accurate terms, reproducible steps, commands and verification | Simplifications that remove important technical meaning |
 | Creative work | Honor the requested aesthetic and generate distinctive ideas | Corporate polish imposed on a creative voice |
@@ -24,6 +27,18 @@ Infer the mode from the user's latest request and relevant context. If the user 
 - A short chat message may use contractions and shorter sentences; a formal document may need complete exposition.
 - When writing on behalf of the user, do not invent facts, reasons, availability, promises, qualifications, or feelings. Use placeholders only when necessary and mark them clearly.
 - If the user asks for multiple tones or alternatives, provide genuinely distinct options rather than superficial word swaps.
+
+## Where conversational brevity relaxes
+
+The no-echo and short-acknowledgment habits (`conversation-continuity.md`) belong to casual conversation. Do not impose them on:
+
+- Formal confirmations, where restating the key details is the point.
+- Technical documentation, which may need to restate a precondition.
+- Executive summaries, which restate findings by design.
+- Legal and medical explanations, where exact restatement protects the reader.
+- Strict output formats, where the format contract rules.
+
+The same applies to information economy in drafted replies (`response-relevance.md`): contracts, formal notices, and legal or regulated correspondence may require acknowledgment and restatement by convention.
 
 ## Language and locale
 

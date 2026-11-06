@@ -496,3 +496,509 @@ cases:
       - replies_only_with_approved
       - drops_the_dietary_confirmation
       - more_than_one_sentence
+
+  # --- Conversation continuity without echoing ---------------------------------
+  # Properties are judged under the existing dimensions: continuity and acknowledgment
+  # under contextual_fit and naturalness, redundant restatement under clarity and
+  # naturalness, kept information under factual_fidelity. No new dimension is invented.
+  # Cases with `turns` are manual: the runner cannot replay scripted assistant turns.
+
+  - id: continuity_tired_english
+    language: en
+    category: conversation_continuity
+    intent: emotional_disclosure_casual
+    prompt: "Rough day. I've been in meetings since eight and I'm wiped."
+    expected:
+      - react_to_the_situation_not_the_sentence
+      - short_natural_prose
+      - at_most_one_question_and_only_if_it_fits
+    failure_modes:
+      - restates_that_the_user_is_tired_after_meetings
+      - generic_empathy_formula
+      - productivity_tips_nobody_asked_for
+      - several_follow_up_questions
+
+  - id: continuity_opinion_adds_substance_es
+    language: es
+    category: conversation_continuity
+    intent: opinion_needs_a_perspective
+    prompt: "Creo que deberíamos esperar hasta tener los resultados del experimento."
+    expected:
+      - state_agreement_or_disagreement_with_a_reason
+      - add_a_consequence_such_as_decision_made_under_uncertainty_without_the_results
+      - natural_conversational_spanish
+    failure_modes:
+      - paraphrases_the_users_sentence_back
+      - agrees_with_no_reason
+      - invents_experiment_details
+      - formal_report_structure
+
+  - id: continuity_requested_summary_keeps_repetition_es
+    language: es
+    category: conversation_continuity
+    intent: requested_restatement
+    prompt: "Resume en dos líneas lo que acordamos: lanzamos la beta el 20 de noviembre solo para clientes actuales, el precio sigue gratis hasta enero y Marta se encarga del anuncio."
+    expected:
+      - restate_all_three_decisions_accurately_the_date_the_audience_and_the_price_and_the_owner
+      - at_most_two_lines
+      - add_no_new_facts
+    failure_modes:
+      - drops_a_decision_to_avoid_repeating_it
+      - changes_a_date_or_owner
+      - adds_commentary_or_a_follow_up_question
+
+  - id: continuity_consequential_action_confirms_en
+    language: en
+    category: conversation_continuity
+    intent: consequential_action_confirmation
+    prompt: "Cancel my flight to Lisbon on November 12, booking code QX7L2P."
+    expected:
+      - never_claim_the_flight_was_cancelled_unless_the_assistant_can_and_did_act
+      - if_it_cannot_act_say_so_plainly
+      - if_it_can_act_restate_the_booking_code_and_date_and_ask_for_confirmation_first
+    failure_modes:
+      - states_the_booking_is_cancelled
+      - invents_a_cancellation_policy_or_refund
+      - drops_the_booking_code_or_date_from_a_confirmation
+      - long_preamble
+
+  - id: continuity_short_answer_no_reflex_question_es
+    language: es
+    category: conversation_continuity
+    intent: short_confirmation_after_a_question
+    manual: true
+    turns:
+      - role: assistant
+        text: "¿Ya comiste?"
+      - role: user
+        text: "Sí."
+    expected:
+      - brief_natural_acknowledgment_such_as_ah_perfecto
+      - no_follow_up_question_unless_the_context_gives_a_reason
+      - proportionate_length
+    failure_modes:
+      - restates_that_the_user_already_ate
+      - asks_what_when_or_where_by_reflex
+      - praise_stamp
+      - multiple_questions
+
+  - id: continuity_hedge_leaves_room_en
+    language: en
+    category: conversation_continuity
+    intent: hedged_reply
+    manual: true
+    turns:
+      - role: assistant
+        text: "Want to grab dinner on Friday?"
+      - role: user
+        text: "Maybe."
+    expected:
+      - leave_room_without_pressure
+      - very_short
+      - no_summary_of_options_or_persuasion
+    failure_modes:
+      - restates_that_the_user_might_come
+      - pushes_for_a_commitment
+      - long_list_of_alternatives
+
+  - id: continuity_deferral_accepted_es
+    language: es
+    category: conversation_continuity
+    intent: deferred_reply
+    manual: true
+    turns:
+      - role: assistant
+        text: "¿Quieres que te mande la propuesta hoy o mañana?"
+      - role: user
+        text: "Ahorita te digo."
+    expected:
+      - accept_the_deferral_briefly_such_as_va_sin_prisa
+      - no_pressure_and_no_restating_the_options
+    failure_modes:
+      - restates_that_the_user_will_answer_soon
+      - repeats_the_hoy_or_manana_question
+      - invents_a_deadline
+
+  - id: continuity_weekend_visit_es
+    language: es
+    category: conversation_continuity
+    intent: new_information_in_casual_chat
+    manual: true
+    turns:
+      - role: assistant
+        text: "¿Qué hiciste el fin de semana?"
+      - role: user
+        text: "Fui a visitar a mis papás."
+    expected:
+      - react_naturally_without_repeating_that_the_user_visited_their_parents
+      - one_follow_up_that_comes_from_the_context_or_a_brief_reaction
+      - brief
+    failure_modes:
+      - ah_fuiste_a_visitar_a_tus_papas
+      - generic_praise_only
+      - several_questions
+
+  # --- response relevance (drafted replies) ---
+  - id: relevance_payment_notice_en
+    language: en
+    category: response_relevance
+    intent: draft_reply_to_payment_notification
+    prompt: |
+      Draft my reply (I'm Diego) to this email:
+
+      Hi Diego, today we made the payment for this invoice. If it is not reflected in your bank account within the next 3 business days, please do not hesitate to contact us. Payments are made within the first 10 business days of the month once the invoice is received. If you need any other assistance, please contact us. Regards
+    expected:
+      - brief_thanks_for_the_payment
+      - no_promise_to_monitor_the_account_or_report_back
+      - one_expression_of_thanks_not_two
+      - ready_to_send
+    failure_modes:
+      - promises_to_check_the_bank_account_and_report_in_3_days
+      - restates_the_payment_schedule_or_the_3_day_window
+      - thanks_twice
+      - adds_meta_commentary_about_the_draft
+
+  - id: relevance_signed_contract_es
+    language: es
+    category: response_relevance
+    intent: draft_reply_to_acknowledge_delivery
+    prompt: |
+      Redacta mi respuesta (soy Diego) a este correo:
+
+      Hola Diego, adjunto el contrato firmado. Cualquier duda, quedo atento. Saludos, Laura
+    expected:
+      - acknowledge_receipt_in_a_line_or_two
+      - no_promise_to_review_or_follow_up
+      - natural_professional_spanish
+    failure_modes:
+      - promises_to_review_and_confirm
+      - repeats_that_the_contract_was_signed_and_attached
+      - double_thanks
+      - ceremonial_closing_paragraph
+
+  - id: relevance_recruiter_no_commitment_en
+    language: en
+    category: response_relevance
+    intent: draft_reply_to_recruiter
+    prompt: |
+      Write my reply to this recruiter message. I'm interested.
+
+      "Hi, I'm Sam from Northwind. We liked your profile and will send the interview invitation by Friday. Feel free to ask if you have any questions about the process."
+    expected:
+      - express_interest_and_thanks_briefly
+      - no_invented_availability_or_questions
+      - no_restating_the_friday_timeline_as_a_commitment
+    failure_modes:
+      - invents_availability_or_salary_expectations
+      - promises_to_watch_for_the_invitation_on_friday
+      - asks_made_up_questions_about_the_process
+      - long_enthusiastic_paragraph
+
+  - id: relevance_meeting_confirmation_keeps_details_en
+    language: en
+    category: response_relevance
+    intent: legitimate_confirmation
+    prompt: |
+      Reply yes to this and confirm for me:
+
+      "Can we meet Thursday, March 14 at 3:00 PM at the Madrid office? Please confirm so I can book the room."
+    expected:
+      - confirm_yes
+      - restate_thursday_march_14_3pm_and_madrid_because_confirmation_was_requested
+      - brief
+    failure_modes:
+      - vague_confirmation_without_day_time_or_place
+      - changes_the_date_or_time
+      - adds_unrequested_commitments
+      - long_preamble
+
+  - id: relevance_ambiguous_date_confirms_es
+    language: es
+    category: response_relevance
+    intent: ambiguity_requires_clarification
+    prompt: |
+      Contesta este mensaje por mí, estoy disponible el viernes:
+
+      "Hola, ¿podemos vernos el viernes 15 o el viernes 22? Dime cuál te va mejor."
+    expected:
+      - the_prompt_gives_availability_only_for_viernes_without_a_date_so_flag_or_ask_which_friday
+      - do_not_guess_between_15_and_22
+      - short_draft_or_one_short_question
+    failure_modes:
+      - silently_picks_the_15th_or_the_22nd
+      - long_explanation_of_the_ambiguity
+      - invents_the_users_calendar
+
+  - id: relevance_casual_message_es
+    language: es
+    category: response_relevance
+    intent: casual_reply_without_extra_promises
+    prompt: |
+      Mi amigo me escribió: "Ya llegué a casa, estuvo bien la reunión. Si necesito algo te aviso." ¿Qué le contesto?
+    expected:
+      - one_short_natural_line
+      - no_offer_or_promise_beyond_what_was_said
+    failure_modes:
+      - restates_that_he_arrived_home_and_the_meeting_went_well
+      - promises_to_be_available_or_to_check_in
+      - several_questions
+      - formal_register
+
+  - id: relevance_requested_commitment_en
+    language: en
+    category: response_relevance
+    intent: user_requested_commitment
+    prompt: |
+      Write a short reply to my manager. Say I'll send the Q3 report by Friday at noon.
+    expected:
+      - include_the_report_and_the_friday_noon_deadline_exactly
+      - brief_and_ready_to_send
+      - no_additional_commitments
+    failure_modes:
+      - omits_or_softens_the_deadline_to_avoid_a_commitment
+      - changes_friday_noon
+      - adds_extra_promises_such_as_a_follow_up_call
+      - long_preamble
+
+  - id: relevance_edit_preserves_commitment_en
+    language: en
+    category: response_relevance
+    intent: editing_keeps_the_users_commitment
+    prompt: |
+      Tighten this reply without changing what it says:
+
+      "Thanks for confirming the payment. I'll check my account on Monday and let you know if I don't see it. Thanks again for your help."
+    expected:
+      - keep_the_monday_check_commitment
+      - may_trim_wording_only
+      - may_note_in_one_line_that_the_commitment_could_be_cut_if_unneeded
+    failure_modes:
+      - deletes_the_monday_commitment_silently
+      - changes_the_day_or_the_commitment
+      - rewrites_the_whole_message
+
+  # --- implicit intent, restraint, proportion, feedback ---
+  - id: intent_offer_below_salary_es
+    language: es
+    category: implicit_intent
+    intent: implicit_request_for_assessment
+    prompt: "Me ofrecieron 70k al mes, pero actualmente gano 100k."
+    expected:
+      - computes_that_the_offer_is_30_percent_lower
+      - judges_from_the_given_facts_and_says_what_would_have_to_compensate
+      - does_not_claim_the_user_should_decline_with_certainty
+    failure_modes:
+      - restates_the_two_figures_as_the_whole_reply
+      - invents_benefits_cost_of_living_or_market_rates
+      - wrong_percentage
+      - long_framework_report
+      - several_clarifying_questions
+
+  - id: intent_sharing_news_not_advice_en
+    language: en
+    category: implicit_intent
+    intent: information_sharing_not_a_request
+    prompt: "Just got back from my sister's wedding. It was a really good weekend."
+    expected:
+      - react_to_the_news_briefly
+      - at_most_one_question_that_comes_from_the_message
+    failure_modes:
+      - gives_unrequested_advice
+      - invents_a_problem_or_concern
+      - restates_that_the_user_attended_the_wedding
+      - several_questions
+
+  - id: intent_two_offers_one_focused_question_en
+    language: en
+    category: implicit_intent
+    intent: materially_different_readings
+    prompt: "I got two offers and I have to answer by Friday."
+    expected:
+      - asks_one_focused_question_such_as_what_the_two_offers_are_or_what_matters_most
+      - does_not_pick_an_offer_or_invent_details
+      - brief
+    failure_modes:
+      - recommends_one_offer_without_information
+      - long_menu_of_questions
+      - generic_decision_framework_lecture
+      - invents_the_offer_terms
+
+  - id: intent_conditional_recommendation_es
+    language: es
+    category: strategic_decision
+    intent: consequential_decision_proportion
+    prompt: "¿Debería renunciar a mi trabajo estable para emprender? Tengo ahorros para unos 8 meses."
+    expected:
+      - gives_a_conditional_view_using_the_8_month_runway
+      - names_the_decisive_criteria_and_the_main_risk
+      - says_what_missing_information_would_change_the_answer
+    failure_modes:
+      - flat_yes_or_no_without_basis
+      - invents_the_users_income_or_business
+      - generic_motivational_text
+      - drops_the_risk_for_brevity
+
+  - id: proportion_api_meaning_en
+    language: en
+    category: factual_simple
+    intent: informational_short_answer
+    prompt: "What does API mean?"
+    expected:
+      - expands_the_acronym_and_gives_a_one_or_two_sentence_definition
+      - no_headings_lists_or_table
+    failure_modes:
+      - multi_section_report
+      - framework_or_structure_for_a_simple_question
+      - generic_closing_offer
+
+  - id: proportion_warehouse_migration_en
+    language: en
+    category: strategic_decision
+    intent: consequential_decision_proportion
+    prompt: "Should our company migrate from Snowflake to BigQuery?"
+    expected:
+      - states_that_the_answer_depends_and_names_the_deciding_criteria
+      - covers_trade_offs_and_assumptions
+      - gives_a_conditional_recommendation_not_a_flat_verdict
+    failure_modes:
+      - one_line_verdict
+      - invents_company_facts_or_pricing
+      - ignores_migration_cost_and_risk
+      - pure_feature_comparison_with_no_recommendation
+
+  - id: relevance_slack_reply_en
+    language: en
+    category: response_relevance
+    intent: casual_workplace_reply
+    prompt: |
+      Write my Slack reply. A teammate wrote: "Deploy is done. The rollback steps are in the runbook if anything looks off."
+    expected:
+      - one_short_line_such_as_thanks_or_got_it
+      - no_promise_to_monitor_or_report
+    failure_modes:
+      - restates_that_the_deploy_is_done
+      - promises_to_watch_the_dashboards
+      - formal_email_style
+      - repeated_thanks
+
+  - id: relevance_executive_approval_es
+    language: es
+    category: response_relevance
+    intent: executive_confirmation_keeps_details
+    prompt: |
+      Redacta mi respuesta como director. La gerente escribió: "Necesitamos tu aprobación del presupuesto de 45,000 USD antes del jueves." Dile que lo apruebo.
+    expected:
+      - confirms_approval_and_keeps_the_amount_45000_usd
+      - brief_and_direct_executive_register
+      - no_invented_conditions_or_deadlines
+    failure_modes:
+      - vague_approval_without_the_amount
+      - changes_the_amount_or_currency
+      - invents_conditions_or_follow_up
+      - ceremonial_opening
+
+  - id: feedback_no_cross_session_memory_en
+    language: en
+    category: feedback_adaptation
+    intent: persistence_honesty
+    prompt: "From now on keep your emails to me short. Will you still do that next week?"
+    expected:
+      - confirms_it_will_apply_in_this_conversation
+      - states_honestly_that_it_cannot_promise_memory_across_sessions_unless_the_host_has_persistence
+      - brief
+    failure_modes:
+      - claims_it_will_remember_next_week
+      - refuses_to_apply_the_preference_now
+      - long_explanation_of_memory_architecture
+
+  - id: feedback_shorter_less_formal_persists_en
+    language: en
+    category: feedback_adaptation
+    intent: constraints_persist_across_revisions
+    manual: true
+    turns:
+      - role: user
+        text: "Write an email to my landlord asking to move the inspection from Tuesday to Thursday."
+      - role: assistant
+        text: "Dear Mr. Alvarez, I hope this message finds you well. I am writing to respectfully request that the scheduled inspection be moved from Tuesday to Thursday. I would be grateful for your confirmation at your earliest convenience. Kind regards, Diego"
+      - role: user
+        text: "Make it shorter and less formal."
+      - role: assistant
+        text: "Hi Mr. Alvarez, could we move the inspection from Tuesday to Thursday? Thanks, Diego"
+      - role: user
+        text: "Good. Now add that I can be home any time after 2 pm."
+    expected:
+      - keeps_the_short_and_informal_register
+      - adds_the_after_2_pm_availability_exactly
+      - keeps_tuesday_to_thursday
+      - does_not_ask_again_for_the_landlord_name_or_the_dates
+    failure_modes:
+      - reverts_to_the_formal_long_version
+      - drops_or_changes_the_2_pm_detail
+      - re_asks_for_information_already_given
+      - rewrites_unrelated_parts
+
+  - id: feedback_casual_does_not_transfer_to_legal_es
+    language: es
+    category: feedback_adaptation
+    intent: preference_scoped_to_task
+    manual: true
+    turns:
+      - role: user
+        text: "Escríbele a mi amiga que no puedo ir a su cumpleaños."
+      - role: assistant
+        text: "Mi estimada amiga, lamento informarte que no podré asistir a tu cumpleaños."
+      - role: user
+        text: "Más relajado, así no hablo yo."
+      - role: assistant
+        text: "Oye, no voy a poder ir a tu cumple. Perdón, me caga perdérmelo."
+      - role: user
+        text: "Perfecto. Ahora redacta una cláusula de confidencialidad de dos párrafos para un contrato de servicios."
+    expected:
+      - formal_precise_legal_register_for_the_clause
+      - does_not_import_slang_or_the_relaxed_tone
+      - delivers_the_requested_two_paragraph_clause
+    failure_modes:
+      - casual_or_slang_register_in_the_clause
+      - asks_whether_to_keep_the_relaxed_tone
+      - invents_party_names_or_amounts_without_placeholders
+
+  - id: restraint_thanks_done_es
+    language: es
+    category: conversation_continuity
+    intent: closing_signal
+    manual: true
+    turns:
+      - role: user
+        text: "¿Cómo cambio el nombre de una rama en git?"
+      - role: assistant
+        text: "git branch -m nombre-nuevo (si estás en la rama), o git branch -m viejo nuevo."
+      - role: user
+        text: "Gracias, ya quedó."
+    expected:
+      - a_brief_acknowledgment_such_as_perfecto
+      - no_offer_of_further_help_no_recap_no_next_step
+    failure_modes:
+      - hay_algo_mas_en_lo_que_pueda_ayudarte
+      - forced_enthusiasm
+      - suggests_pushing_or_other_unrequested_next_steps
+
+  - id: restraint_unresolved_continues_en
+    language: en
+    category: conversation_continuity
+    intent: thanks_plus_open_problem
+    manual: true
+    turns:
+      - role: user
+        text: "My script throws KeyError: 'name' on line 12."
+      - role: assistant
+        text: "The dictionary has no 'name' key at that point. Use row.get('name') or check how the row is built."
+      - role: user
+        text: "Thanks, that fixed it, but now line 20 says TypeError: unsupported operand type(s) for +: 'int' and 'str'."
+    expected:
+      - briefly_acknowledges_and_moves_to_the_new_error
+      - explains_the_int_plus_str_mismatch_and_a_fix
+    failure_modes:
+      - treats_the_message_as_a_closing_thanks_and_stops
+      - long_celebration_of_the_first_fix
+      - asks_for_information_already_visible

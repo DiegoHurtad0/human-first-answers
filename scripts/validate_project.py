@@ -244,6 +244,68 @@ def readme_layout_paths(text: str) -> list[str]:
     return paths
 
 
+_HOST = r"(?:claude(?: code)?|anthropic|codex|openai|chatgpt|copilot|gemini(?: cli)?|windsurf|antigravity)"
+# A host-conditional directive: the rule changes depending on which assistant runs it.
+HOST_CONDITIONAL = re.compile(
+    rf"\b(?:if|when|whenever|while|where|unless)\b[^.\n]{{0,60}}?\b(?:in|on|under|inside|running (?:in|on)|run(?:s|ning)? by)\s+(?:the\s+)?{_HOST}\b"
+    rf"|(?:^|[.!?]\s+|[-*]\s+)(?:in|on|under|inside|for)\s+(?:the\s+)?{_HOST}\b\s*[,:]"
+    rf"|\b{_HOST}\b[- ](?:only|specific|exclusive)\b"
+    rf"|\b(?:if|when)\s+(?:the\s+)?(?:host|assistant|agent|model)\s+(?:is|runs as)\s+{_HOST}\b",
+    re.I,
+)
+# A host-owned mechanism: a config file, directory, or tool name the rules would depend on.
+HOST_MECHANISM = re.compile(
+    r"\b(?:CLAUDE|GEMINI)\.md\b|(?<![\w/])\.(?:claude|gemini|codex|copilot)/|copilot-instructions|openai\.yaml|\bactivate_skill\b",
+    re.I,
+)
+
+
+def check_host_neutrality(root: Path, report: Report) -> None:
+    """The behavioral contract must not depend on one assistant.
+
+    Mentioning a product is fine (an example, a quotation, a documented pattern). What is rejected is a
+    rule that is conditional on a host ("when running in X, do Y", "X-only") or that relies on a
+    host-owned mechanism (a config file, directory, or tool name). Platform specifics belong in the
+    README and docs so there is one behavioral source of truth.
+    """
+    files = [root / "SKILL.md"]
+    if (root / "references").is_dir():
+        files += sorted((root / "references").glob("*.md"))
+    for path in files:
+        if not path.exists():
+            continue
+        for number, line in enumerate(path.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
+            for pattern, what in ((HOST_CONDITIONAL, "a host-conditional rule"), (HOST_MECHANISM, "a host-owned mechanism")):
+                match = pattern.search(line)
+                if match:
+                    report.error(f"{path.relative_to(root)}:{number}: {what} ({match.group(0).strip()!r}); "
+                                 "keep the behavioral contract host-neutral and put platform details in the README")
+
+
+INSTALL_COMMAND = re.compile(r"^\s*(?:git clone\b.*|ln -s\b.*)$", re.M)
+
+
+def check_install_docs(root: Path, report: Report) -> None:
+    """Every clone or symlink command in the README must install into a directory named after the skill."""
+    text = read_text(root / "README.md", report)
+    if text is None:
+        return
+    commands = [m.group(0).strip() for m in INSTALL_COMMAND.finditer(text)]
+    if not commands:
+        report.error("README.md: no install commands found (git clone or ln -s)")
+    for command in commands:
+        destination = command.split()[-1].rstrip("/")
+        if destination.split("/")[-1] != "natural-voice":
+            report.error(f"README.md: install command {command!r} does not target a directory named 'natural-voice'")
+    section = re.search(r"## Supported AI Assistants\n(.*?)(?=\n## )", text, re.S)
+    for number, line in enumerate((section.group(1) if section else "").splitlines(), 1):
+        stripped = line.strip()
+        # These run from an arbitrary directory, so a bare relative path would fail there.
+        if re.match(r"python3? (?:-m pip install -r requirements-dev\.txt|scripts/)", stripped):
+            report.error(f"README.md: install-section command {stripped!r} uses a path relative to the repository; "
+                         "use the installed path so it works from any directory")
+
+
 def check_readme(root: Path, report: Report) -> None:
     text = read_text(root / "README.md", report)
     if text is None:
@@ -333,7 +395,9 @@ def validate(root: Path, strict_install: bool = False, project_files: bool = Tru
         check_reachability(root, skill_text, report)
     check_rubric(root, report)
     check_links(root, report)
+    check_host_neutrality(root, report)
     if project_files:
+        check_install_docs(root, report)
         check_required_files(root, report)
         check_license(root, skill_text, report)
         check_readme(root, report)

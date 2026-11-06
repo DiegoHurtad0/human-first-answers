@@ -45,9 +45,15 @@ REQUIRED_CATEGORIES = [
     "uncertainty_contradiction",
     "adhd_mode",
     "instruction_precedence",
+    "conversation_continuity",
+    "response_relevance",
+    "implicit_intent",
+    "feedback_adaptation",
 ]
 REQUIRED_LANGUAGE_CATEGORIES = [("casual_conversation", "en"), ("casual_conversation", "es")]
 MIN_SPANISH_CASES = 5
+MULTI_TURN_LANGUAGES = ["en", "es"]  # each needs at least one scripted multi-turn (manual) evaluation case
+TURN_ROLES = {"user", "assistant"}
 
 ID_RE = re.compile(r"^[a-z0-9_]+$")
 LANGUAGE_RE = re.compile(r"^[a-z]{2}(-[A-Z]{2})?$")
@@ -79,6 +85,39 @@ def _string_list(value: object) -> bool:
     return isinstance(value, list) and bool(value) and all(isinstance(x, str) and x.strip() for x in value)
 
 
+def check_case_input(case: dict, label: str, errors: list[str]) -> None:
+    """A case supplies exactly one of `prompt` (single turn) or `turns` (scripted transcript).
+
+    `turns` is the history before the response under test, so it must end on a user turn.
+    The runner can only send one prompt and cannot replay scripted assistant turns, so a
+    transcript is a manual case: it is reviewed by a person in a real stateful conversation.
+    """
+    if ("prompt" in case) == ("turns" in case):
+        errors.append(f"{label}: give exactly one of 'prompt' or 'turns'")
+    if "prompt" in case and (not isinstance(case["prompt"], str) or not case["prompt"].strip()):
+        errors.append(f"{label}: 'prompt' must be a non-empty string")
+    if "turns" not in case:
+        return
+    turns = case["turns"]
+    if not isinstance(turns, list) or len(turns) < 2:
+        errors.append(f"{label}: 'turns' must be a list of at least two turns (use 'prompt' for one)")
+        return
+    for number, turn in enumerate(turns, start=1):
+        if (not isinstance(turn, dict) or set(turn) != {"role", "text"} or turn["role"] not in TURN_ROLES
+                or not isinstance(turn["text"], str) or not turn["text"].strip()):
+            errors.append(f"{label}: turn {number} must be {{role: user|assistant, text: <non-empty>}}")
+    if isinstance(turns[-1], dict) and turns[-1].get("role") != "user":
+        errors.append(f"{label}: the last turn must be a user turn; the response under test follows it")
+    if case.get("manual") is not True:
+        errors.append(f"{label}: cases with 'turns' must set 'manual: true' (the runner cannot replay scripted turns)")
+
+
+def render_transcript(turns: list[dict]) -> str:
+    """Plain-text transcript for a human reviewer replaying a manual case."""
+    names = {"user": "User", "assistant": "Assistant"}
+    return "\n".join(f"{names[t['role']]}: {t['text']}" for t in turns)
+
+
 def validate_evaluation_file(data: dict) -> list[str]:
     """Return every problem found, so one run reports them all."""
     errors: list[str] = []
@@ -106,15 +145,15 @@ def validate_evaluation_file(data: dict) -> list[str]:
             errors.append(f"{label}: 'language' must look like 'en' or 'es-MX'")
         if case.get("category") not in REQUIRED_CATEGORIES:
             errors.append(f"{label}: 'category' {case.get('category')!r} is not a known category")
-        for field in ("intent", "prompt"):
-            if not isinstance(case.get(field), str) or not case[field].strip():
-                errors.append(f"{label}: '{field}' must be a non-empty string")
+        if not isinstance(case.get("intent"), str) or not case["intent"].strip():
+            errors.append(f"{label}: 'intent' must be a non-empty string")
+        check_case_input(case, label, errors)
         for field in ("expected", "failure_modes"):
             if not _string_list(case.get(field)):
                 errors.append(f"{label}: '{field}' must be a non-empty list of strings")
         if "manual" in case and not isinstance(case["manual"], bool):
             errors.append(f"{label}: 'manual' must be true or false")
-        unknown = set(case) - {"id", "language", "category", "intent", "prompt", "expected", "failure_modes", "manual"}
+        unknown = set(case) - {"id", "language", "category", "intent", "prompt", "turns", "expected", "failure_modes", "manual"}
         if unknown:
             errors.append(f"{label}: unknown field(s) {sorted(unknown)}")
     errors += check_coverage([c for c in cases if isinstance(c, dict)])
@@ -130,6 +169,9 @@ def check_coverage(cases: list[dict]) -> list[str]:
     for category, prefix in REQUIRED_LANGUAGE_CATEGORIES:
         if not any(c.get("category") == category and str(c.get("language", "")).startswith(prefix) for c in cases):
             errors.append(f"coverage: no '{category}' case in language '{prefix}'")
+    for prefix in MULTI_TURN_LANGUAGES:
+        if not any("turns" in c and str(c.get("language", "")).startswith(prefix) for c in cases):
+            errors.append(f"coverage: no scripted multi-turn evaluation case in language '{prefix}'")
     spanish = sum(1 for c in cases if str(c.get("language", "")).startswith("es"))
     if spanish < MIN_SPANISH_CASES:
         errors.append(f"coverage: {spanish} Spanish case(s), need at least {MIN_SPANISH_CASES}")
@@ -156,8 +198,7 @@ def validate_regression_file(data: dict) -> list[str]:
             errors.append(f"{label}: duplicate id")
         else:
             seen.add(cid)
-        if not isinstance(case.get("prompt"), str) or not case["prompt"].strip():
-            errors.append(f"{label}: 'prompt' must be a non-empty string")
+        check_case_input(case, label, errors)
         for field in ("must", "must_not"):
             if not _string_list(case.get(field)):
                 errors.append(f"{label}: '{field}' must be a non-empty list of strings")
@@ -165,7 +206,7 @@ def validate_regression_file(data: dict) -> list[str]:
             errors.append(f"{label}: 'language' must look like 'en' or 'es-MX'")
         if "manual" in case and not isinstance(case["manual"], bool):
             errors.append(f"{label}: 'manual' must be true or false")
-        unknown = set(case) - {"id", "language", "prompt", "must", "must_not", "manual", "note"}
+        unknown = set(case) - {"id", "language", "prompt", "turns", "must", "must_not", "manual", "note"}
         if unknown:
             errors.append(f"{label}: unknown field(s) {sorted(unknown)}")
     return errors
@@ -176,7 +217,7 @@ def load_evaluation_cases(path: Path) -> dict[str, dict]:
     errors = validate_evaluation_file(data)
     if errors:
         raise CaseFileError(f"{path}: " + "; ".join(errors))
-    return {c["id"]: {**c, "manual": c.get("manual", False)} for c in data["cases"]}
+    return {c["id"]: {"prompt": None, "turns": None, **c, "manual": c.get("manual", False)} for c in data["cases"]}
 
 
 def load_regression_cases(path: Path) -> dict[str, dict]:
@@ -187,7 +228,8 @@ def load_regression_cases(path: Path) -> dict[str, dict]:
         raise CaseFileError(f"{path}: " + "; ".join(errors))
     return {
         c["id"]: {"id": c["id"], "language": c.get("language", "en"), "category": "regression", "intent": "regression",
-                  "prompt": c["prompt"], "expected": c["must"], "failure_modes": c["must_not"],
+                  "prompt": c.get("prompt"), "turns": c.get("turns"), "expected": c["must"],
+                  "failure_modes": c["must_not"],
                   "manual": c.get("manual", False)}
         for c in data["regressions"]
     }

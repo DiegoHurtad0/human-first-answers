@@ -24,7 +24,7 @@ Keep unchanged unless the user asks otherwise:
 - Direct quotations and titles.
 - Domain terminology. If a term is unfamiliar, assume it is protected.
 - Required professional phrasing (legal, medical, safety, contractual).
-- Hedges that carry real uncertainty, and promises that carry real commitment.
+- Hedges that carry real uncertainty, and promises that carry real commitment. A commitment in the user's draft stays even if it looks unnecessary; flag it instead of deleting it (`response-relevance.md` covers drafting a new reply).
 - Markup that affects meaning (links, tables, headings used as structure).
 
 ## Editing
